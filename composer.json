@@ -1,0 +1,35 @@
+{
+    "name": "PROJECT_NAME",
+    "type": "PROJECT_TYPE",
+    "description": "PROJECT_DESC",
+    "keywords": ["KEYWORD", "KEYWORD"],
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Josh Lueken"
+        }
+    ],
+
+    "require": {
+        "php": ">=5.6.0"
+    },
+    "require-dev": {
+	   "peridot-php/peridot":"2.0.*@dev"
+    },
+
+    "autoload": {
+        "psr-4": {
+            "Peridot\\Plugin\\": "src/"
+        },
+        "files": [
+            "src/DSL.php"
+        ]
+    },
+    "autoload-dev": {
+        "psr-4": {
+
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}

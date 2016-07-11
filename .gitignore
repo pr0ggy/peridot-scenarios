@@ -1,0 +1,9 @@
+build/
+code-coverage-report/
+vendor/
+.idea/
+composer.lock
+peridot.phar
+.DS_Store
+docs/
+tmp/
