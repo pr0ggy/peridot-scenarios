@@ -1,35 +1,34 @@
 {
-    "name": "PROJECT_NAME",
-    "type": "PROJECT_TYPE",
-    "description": "PROJECT_DESC",
-    "keywords": ["KEYWORD", "KEYWORD"],
+    "name": "pr0ggy/peridot-scenarios",
+    "description": "A plugin for the Peridot BDD testing framework which allows test definitions to run against multiple scenarios",
+    "keywords": ["Peridot", "BDD", "TDD", "testing", "PHP"],
     "license": "MIT",
     "authors": [
         {
             "name": "Josh Lueken"
         }
     ],
+    "minimum-stability": "dev",
+    "prefer-stable": true,
 
     "require": {
         "php": ">=5.6.0"
     },
+
     "require-dev": {
-	   "peridot-php/peridot":"2.0.*@dev"
+	   "peridot-php/peridot":"2.0.*@dev",
+        "mockery/mockery": "^0.9.5",
+        "pr0ggy/mockleton": "~0.1 || ~1.0"
     },
 
     "autoload": {
         "psr-4": {
-            "Peridot\\Plugin\\": "src/"
+            "Peridot\\Plugin\\": "src/",
+            "Peridot\\Plugin\\Scenarios\\Test\\": "specs/"
         },
         "files": [
-            "src/DSL.php"
+            "src/DSL.php",
+            "src/Scenarios/funcs.php"
         ]
-    },
-    "autoload-dev": {
-        "psr-4": {
-
-        }
-    },
-    "minimum-stability": "dev",
-    "prefer-stable": true
+    }
 }

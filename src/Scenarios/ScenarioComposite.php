@@ -8,26 +8,24 @@ use Peridot\Core\AbstractTest;
 
 class ScenarioComposite
 {
-    use HasEventEmitterTrait;
-
     protected $test;
 
     protected $scenarios;
 
-    public function __construct(AbstractTest $test, array $scenarios = [], EventEmitterInterface $event_emitter)
+    public function __construct(AbstractTest $test, array $scenarios = [])
     {
         $this->test = $test;
         $this->scenarios = $scenarios;
-        $this->eventEmitter = $event_emitter;
     }
 
     public function asSetupFunction()
     {
-        switch(count($this->scenarios)) {
+        switch (count($this->scenarios)) {
             case 0:
                 return getNoOp();
             case 1:
                 return $this->scenarios[0]->setUpFunctionBoundTo($this->test->getScope());
+
             default:
                 return $this->getMultiScenarioCompositeSetupFunction();
         }
@@ -38,7 +36,7 @@ class ScenarioComposite
         $test_scope = $this->test->getScope();
         $scenarios = $this->scenarios;
         $scenario_composite = $this;
-        return function() use ($scenario_composite, $test_scope, $scenarios) {
+        return function () use ($scenario_composite, $test_scope, $scenarios) {
             $scenario_composite->executeAllScenariosExceptLastAgainstTestDefinition();
 
             $last_scenario = $scenarios[count($scenarios) - 1];
@@ -47,7 +45,8 @@ class ScenarioComposite
         };
     }
 
-    public function executeAllScenariosExceptLastAgainstTestDefinition() {
+    public function executeAllScenariosExceptLastAgainstTestDefinition()
+    {
         $test_definition = $this->test->getDefinition();
         $test_scope = $this->test->getScope();
         $all_scenarios_except_last = array_slice($this->scenarios, 0, count($this->scenarios)-1);
@@ -75,7 +74,7 @@ class ScenarioComposite
 
         $last_scenario = $this->scenarios[count($this->scenarios) - 1];
         $last_scenario_teardown = $last_scenario->tearDownFunctionBoundTo($this->test->getScope());
-        return function() use ($last_scenario_teardown) {
+        return function () use ($last_scenario_teardown) {
             $last_scenario_teardown();
         };
     }

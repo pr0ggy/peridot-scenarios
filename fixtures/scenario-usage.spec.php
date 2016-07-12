@@ -22,9 +22,7 @@ describe('convertValueToFizzBuzz($value)', function() {
         it('should return "FizzBuzz"', function() {
             assert(convertValueToFizzBuzz($this->expected_fizzbuzz_value) === 'FizzBuzz');
         });
-        inScenario(
-            setUp(function() { $this->expected_fizzbuzz_value = 0; })
-        );
+        inScenario(['expected_fizzbuzz_value'=>0]);
         inScenario(
             setUp(function() { $this->expected_fizzbuzz_value = 15; })
         );
