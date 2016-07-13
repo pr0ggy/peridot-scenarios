@@ -2,9 +2,6 @@
 
 namespace Peridot\Plugin\Scenarios;
 
-use function Peridot\Plugin\Scenarios\getNoOp;
-use Mockleton\MockableSingletonBehavior;
-
 /**
  * Handles creation and configuration of new scenarios based on given setup and teardown entities.
  *
@@ -12,8 +9,6 @@ use Mockleton\MockableSingletonBehavior;
  */
 class ScenarioFactory
 {
-    use MockableSingletonBehavior;
-
     /**
      * Creates and returns a new Scenario instance
      *

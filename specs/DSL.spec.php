@@ -5,9 +5,10 @@
 
 use Mockery as m;
 use Peridot\Plugin\Scenarios\Plugin;
-use Peridot\Plugin\Scenarios\ScenarioFactory;
 
 describe('DSL Extension', function () {
+
+    $this->noOp = function () { };
 
     describe('inScenario', function () {
         /*
@@ -17,28 +18,15 @@ describe('DSL Extension', function () {
          */
         $this->mock_plugin_context =
             m::mock('Peridot\Plugin\Scenarios\Plugin')
-                ->shouldReceive('whenScenarioCreated')
-                ->getMock();
-
-        $this->mock_scenario = m::mock('Peridot\Plugin\Scenarios\Scenario');
-
-        $this->mock_scenario_factory =
-            m::mock('Peridot\Plugin\Scenarios\ScenarioFactory')
-                ->shouldReceive('createScenario')
-                ->andReturn($this->mock_scenario)
+                ->shouldReceive('registerNewScenario')
+                ->once()
                 ->getMock();
 
         $this->original_plugin_context = Plugin::getInstance();
-        $this->original_scenario_factory = ScenarioFactory::getInstance();
-
-        $this->noOp = function () { };
 
         beforeEach(function () {
             Plugin::unregisterSingletonInstance();
             Plugin::registerSingletonInstance($this->mock_plugin_context);
-
-            ScenarioFactory::unregisterSingletonInstance();
-            ScenarioFactory::registerSingletonInstance($this->mock_scenario_factory);
         });
 
         afterEach(function () {
@@ -46,9 +34,34 @@ describe('DSL Extension', function () {
 
             Plugin::unregisterSingletonInstance();
             Plugin::registerSingletonInstance($this->original_plugin_context);
+        });
 
-            ScenarioFactory::unregisterSingletonInstance();
-            ScenarioFactory::registerSingletonInstance($this->original_scenario_factory);
+        it('should notify plugin instance of new scenario', function() {
+            $this->mock_plugin_context
+                ->shouldReceive('registerNewScenario')
+                ->with(m::type('callable'), m::type('callable'));
+
+            inScenario([$this, 'noOp'], [$this, 'noOp']);
+        });
+
+        it('should allow pass-thru of any exception generated during call', function () {
+            $exception = new Exception('Test exception');
+            Plugin::unregisterSingletonInstance();
+            Plugin::registerSingletonInstance(
+                m::mock('Peridot\Plugin\Scenarios\Plugin')
+                    ->shouldReceive('registerNewScenario')
+                    ->andThrow($exception)
+                    ->getMock()
+            );
+
+            try {
+                inScenario([]);
+            } catch (Exception $e) {
+                assert($e === $exception);
+                return;
+            }
+
+            throw new Exception('Failed to allow pass-thru of generated exception');
         });
 
         it('should allow closure as setup arg', function () {
@@ -71,46 +84,6 @@ describe('DSL Extension', function () {
         it('should allow callable as teardown arg', function () {
             $some_setup_arg = [$this, 'noOp'];
             inScenario($some_setup_arg, [$this, 'noOp']);
-        });
-
-        it('should allow pass-thru of any exception generated during call', function () {
-            $exception = new Exception('Test exception');
-            ScenarioFactory::unregisterSingletonInstance();
-            ScenarioFactory::registerSingletonInstance(
-                m::mock('Peridot\Plugin\Scenarios\ScenarioFactory')
-                    ->shouldReceive('createScenario')
-                    ->andThrow($exception)
-                    ->getMock()
-            );
-
-            try {
-                inScenario([]);
-            } catch (Exception $e) {
-                assert($e === $exception);
-                return;
-            }
-
-            throw new Exception('Failed to allow pass-thru of generated exception');
-        });
-
-        it('should pass given args to scenario factory for Scenario instance creation', function () {
-            $scenario_setup = function () {};
-            $scenario_teardown = function () {};
-            $this->mock_scenario_factory
-                ->shouldReceive('createScenario')
-                ->once()
-                ->with($scenario_setup, $scenario_teardown);
-
-            inScenario($scenario_setup, $scenario_teardown);
-        });
-
-        it('should notify plugin context of scenario created by the factory', function () {
-            $this->mock_plugin_context
-                ->shouldReceive('whenScenarioCreated')
-                ->once()
-                ->with($this->mock_scenario);
-
-            inScenario([]);
         });
     });
 

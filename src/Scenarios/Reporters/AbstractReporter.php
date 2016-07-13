@@ -1,26 +1,25 @@
 <?php
 
-namespace Peridot\Plugin\Scenarios;
+namespace Peridot\Plugin\Scenarios\Reporters;
 
 use Peridot\EventEmitterInterface;
 use Peridot\Core\HasEventEmitterTrait;
 use Peridot\Core\AbstractTest;
+use Peridot\Reporter\AbstractBaseReporter ;
 
-class Reporter
+abstract class AbstractReporter
 {
     use HasEventEmitterTrait;
 
     public function __construct(EventEmitterInterface $event_emitter)
     {
         $this->eventEmitter = $event_emitter;
-        // $this->registerEventHandlers();
-        $this->eventEmitter->on('peridot.reporters', [$this, 'registerEventHandlers']);
+        $this->eventEmitter->on('runner.start', [$this, 'registerEventHandlers']);
     }
 
     public function registerEventHandlers()
     {
         $this->eventEmitter->on('test.failed', [$this, 'whenTestFails']);
-        $this->eventEmitter->on('test.passed', [$this, 'whenTestPasses']);
     }
 
     public function whenTestFails(AbstractTest $test, \Exception $e)
@@ -29,24 +28,16 @@ class Reporter
             return;
         }
 
-        echo
+        $failed_scenario_message =
             isset($e->failed_scenario_index)
                 ? "SCENARIO {$e->failed_scenario_index} FAILED\n"
                 : "LAST SCENARIO FAILED\n";
+
+        $this->eventEmitter->emit(
+            'reporter.customOutputRequest',
+            $this->getScenarioFailureReportingCallbackForMessage($failed_scenario_message)
+        );
     }
 
-    public function whenTestPasses(AbstractTest $test)
-    {
-        return; // do we even want to show passing scenario counts?
-
-        if ($test->explicitly_defined_scenario_count === 0) {
-            return;
-        }
-
-        $scenario_word = 'Scenario';
-        if ($test->explicitly_defined_scenario_count > 1) {
-            $scenario_word .= 's';
-        }
-        echo "{$test->explicitly_defined_scenario_count} {$scenario_word} Passed\n";
-    }
+    abstract public function getScenarioFailureReportingCallbackForMessage($scenario_failure_message);
 }

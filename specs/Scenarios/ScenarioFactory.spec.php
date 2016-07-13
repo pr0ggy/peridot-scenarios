@@ -8,24 +8,16 @@ use Peridot\Plugin\Scenarios\ScenarioFactory;
 use Peridot\Plugin\Scenarios\Test\Doubles\ScenarioFactorySetupTeardownConversionSpy;
 
 describe('Peridot\Plugin\Scenarios\ScenarioFactory', function () {
-    $this->original_scenario_factory = ScenarioFactory::getInstance();
 
     beforeEach(function () {
         $this->scenario_factory_spy = new ScenarioFactorySetupTeardownConversionSpy();
-        ScenarioFactory::unregisterSingletonInstance();
-        ScenarioFactory::registerSingletonInstance($this->scenario_factory_spy);
-    });
-
-    afterEach(function () {
-        ScenarioFactory::unregisterSingletonInstance();
-        ScenarioFactory::registerSingletonInstance($this->original_scenario_factory);
     });
 
     describe('->createScenario($setup, $teardown)', function () {
         context('with callable $setup', function () {
             it('leaves setup unchanged', function () {
                 $scenario =
-                    ScenarioFactory::getInstance()
+                    $this->scenario_factory_spy
                         ->createScenario($this->callable_setup);
 
                 assert($this->scenario_factory_spy->setupGivenToCreatedScenarioWas($this->callable_setup));
@@ -42,7 +34,7 @@ describe('Peridot\Plugin\Scenarios\ScenarioFactory', function () {
         context('with a k/v map given as $setup', function () {
             it('converts setup to callable', function () {
                 $scenario =
-                    ScenarioFactory::getInstance()
+                    $this->scenario_factory_spy
                         ->createScenario(['foo' => 'bar']);
 
                 assert($this->scenario_factory_spy->setupGivenToCreatedScenarioWasCallable());
@@ -53,7 +45,7 @@ describe('Peridot\Plugin\Scenarios\ScenarioFactory', function () {
             it('throws a TypeError', function () {
                 try {
                     $scenario =
-                        ScenarioFactory::getInstance()
+                        $this->scenario_factory_spy
                             ->createScenario($this->bad_setup_value);
                 } catch (TypeError $e) {
                     return;
@@ -70,7 +62,7 @@ describe('Peridot\Plugin\Scenarios\ScenarioFactory', function () {
         context('with callable $teardown', function () {
             it('leaves teardown unchanged', function () {
                 $scenario =
-                    ScenarioFactory::getInstance()
+                    $this->scenario_factory_spy
                         ->createScenario([], $this->callable_teardown);
 
                 assert($this->scenario_factory_spy->teardownGivenToCreatedScenarioWas($this->callable_teardown));
@@ -87,7 +79,7 @@ describe('Peridot\Plugin\Scenarios\ScenarioFactory', function () {
         context('with null $teardown', function () {
             it('generates a no-op teardown', function () {
                 $scenario =
-                    ScenarioFactory::getInstance()
+                    $this->scenario_factory_spy
                         ->createScenario([]);
 
                 assert($this->scenario_factory_spy->teardownGivenToCreatedScenarioWasCallable());
@@ -98,7 +90,7 @@ describe('Peridot\Plugin\Scenarios\ScenarioFactory', function () {
             it('throws a TypeError', function () {
                 try {
                     $scenario =
-                        ScenarioFactory::getInstance()
+                        $this->scenario_factory_spy
                             ->createScenario([], $this->bad_teardown_value);
                 } catch (TypeError $e) {
                     return;

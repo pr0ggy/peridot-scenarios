@@ -3,6 +3,7 @@
 namespace Peridot\Plugin\Scenarios;
 
 use Peridot\EventEmitterInterface;
+use Peridot\Plugin\Scenarios\Reporters\AbstractReporter;
 use Mockleton\MockableSingletonBehavior;
 
 /**
@@ -15,30 +16,44 @@ class Plugin
     use MockableSingletonBehavior;
 
     /**
-     * @var \Peridot\EventEmitterInterface
-     */
-    protected $event_emitter;
-
-    /**
-     * @var \Peridot\Plugin\Scenarios\ContextListener
+     * @var ContextListener
      */
     protected $peridot_context_listener;
 
-    public function __construct(EventEmitterInterface $event_emitter, ContextListener $peridot_context_listener)
-    {
+    /**
+     * @var Reporters\AbstractReporter
+     */
+    protected $scenario_reporter;
+
+    /**
+     * @var ScenarioFactory
+     */
+    protected $scenario_factory;
+
+    /**
+     * @param ScenarioFactory       $scenario_factory
+     * @param ContextListener       $peridot_context_listener
+     * @param AbstractReporter      $scenario_reporter
+     */
+    public function __construct(
+        ScenarioFactory $scenario_factory,
+        ContextListener $peridot_context_listener,
+        AbstractReporter $scenario_reporter
+    ) {
         self::verifyInstanceNotYetRegistered();
-        $this->event_emitter = $event_emitter;
+        $this->scenario_factory = $scenario_factory;
         $this->peridot_context_listener = $peridot_context_listener;
+        $this->scenario_reporter = $scenario_reporter;
     }
 
     /**
-     * Fires a 'scenario.created' event from the event emitter indicating that a new test scenario
-     * has been created
-     *
-     * @param  Scenario $test_scenario
+     * @param  callable|array $setup
+     * @param  callable|null  $teardown
      */
-    public function whenScenarioCreated(Scenario $test_scenario)
+    public function registerNewScenario($setup, callable $teardown = null)
     {
-        $this->event_emitter->emit('scenario.created', $test_scenario);
+        $this->peridot_context_listener->addScenarioToContext(
+            $this->scenario_factory->createScenario($setup, $teardown)
+        );
     }
 }

@@ -4,7 +4,6 @@
  */
 
 use Peridot\Plugin\Scenarios;
-use Peridot\Plugin\Scenarios\ScenarioFactory;
 
 /**
  * Peridot DSL extension which binds a specific scenario to a test.  A test definition will run once
@@ -15,7 +14,7 @@ use Peridot\Plugin\Scenarios\ScenarioFactory;
  * @param  callable|array $scenario_setup
  * @param  callable|null  $scenario_teardown
  * @throws RuntimeException if setup argument is not array or callable
- * @throws RuntimeException if teardown argument is not callable
+ * @throws TypeError if teardown argument is not callable
  *
  * @see ScenarioFactory
  * @see Scenario
@@ -23,9 +22,7 @@ use Peridot\Plugin\Scenarios\ScenarioFactory;
 function inScenario($scenario_setup, callable $scenario_teardown = null)
 {
     Scenarios\Plugin::getInstance()
-        ->whenScenarioCreated(
-            ScenarioFactory::getInstance()->createScenario($scenario_setup, $scenario_teardown)
-        );
+        ->registerNewScenario($scenario_setup, $scenario_teardown);
 }
 
 /**

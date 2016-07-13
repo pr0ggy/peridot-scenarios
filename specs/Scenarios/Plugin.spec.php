@@ -9,8 +9,17 @@ use Peridot\Plugin\Scenarios\Plugin;
 describe('Peridot\Plugin\Scenarios\Plugin', function () {
     $this->original_plugin_context = Plugin::getInstance();
 
+    $this->fake_scenario_factory = m::mock('\Peridot\Plugin\Scenarios\ScenarioFactory')->shouldIgnoreMissing();
+    $this->fake_context_listener = m::mock('\Peridot\Plugin\Scenarios\ContextListener')->shouldIgnoreMissing();
+
     beforeEach(function () {
         Plugin::unregisterSingletonInstance();
+        $this->plugin_instance =
+            new Plugin(
+                $this->fake_scenario_factory,
+                $this->fake_context_listener,
+                m::mock('\Peridot\Plugin\Scenarios\Reporters\AbstractReporter')
+            );
     });
 
     afterEach(function () {
@@ -19,14 +28,17 @@ describe('Peridot\Plugin\Scenarios\Plugin', function () {
     });
 
     it('should allow new instance creation if singleton instance not yet registered', function () {
+        Plugin::unregisterSingletonInstance();
         createNewPluginInstance();
     });
 
     function createNewPluginInstance()
     {
-        $fake_event_emitter = m::mock('\Peridot\EventEmitterInterface');
-        $fake_context_listener = m::mock('\Peridot\Plugin\Scenarios\ContextListener');
-        return new Plugin($fake_event_emitter, $fake_context_listener);
+        return new Plugin(
+            m::mock('\Peridot\Plugin\Scenarios\ScenarioFactory'),
+            m::mock('\Peridot\Plugin\Scenarios\ContextListener'),
+            m::mock('\Peridot\Plugin\Scenarios\Reporters\AbstractReporter')
+        );
     }
 
     it('should throw RuntimeException if singleton instance already registered', function () {
@@ -41,27 +53,32 @@ describe('Peridot\Plugin\Scenarios\Plugin', function () {
         throw new Exception('Failed to throw exception when attempting to create instance with singleton already registered');
     });
 
-    describe('->whenScenarioCreated($test_scenario)', function () {
-        it('should emit the given scenario argument packaged in a "scenario.created" event', function () {
-            $fake_scenario = m::mock('\Peridot\Plugin\Scenarios\Scenario');
+    describe('->registerNewScenario($setup, $teardown)', function () {
+        it('should defer Scenario instance creation to the ScenarioFactory dependency', function() {
+            $some_scenario_setup = function () {};
+            $some_scenario_teardown = function () {};
+            $this->fake_scenario_factory
+                ->shouldReceive('createScenario')
+                ->with($some_scenario_setup, $some_scenario_teardown)
+                ->andReturn(m::mock('Peridot\Plugin\Scenarios\Scenario'));
 
-            $mock_event_emitter =
-                m::mock('\Peridot\EventEmitterInterface')
-                ->shouldReceive('emit')
-                ->once()
-                ->with('scenario.created', $fake_scenario)
-                ->getMock();
+            $this->plugin_instance->registerNewScenario($some_scenario_setup, $some_scenario_teardown);
+        });
 
-            $fake_context_listener = m::mock('\Peridot\Plugin\Scenarios\ContextListener');
+        it('should pass Scenario instance created via the ScenarioFactory to the ContextListener', function() {
+            $some_scenario_setup = function () {};
+            $some_scenario_teardown = function () {};
+            $some_scenario = m::mock('Peridot\Plugin\Scenarios\Scenario');
 
-            Plugin::registerSingletonInstance(
-                new Plugin(
-                    $mock_event_emitter,
-                    $fake_context_listener
-                )
-            );
+            $this->fake_scenario_factory
+                ->shouldReceive('createScenario')
+                ->andReturn($some_scenario);
 
-            Plugin::getInstance()->whenScenarioCreated($fake_scenario);
+            $this->fake_context_listener
+                ->shouldReceive('addScenarioToContext')
+                ->with($some_scenario);
+
+            $this->plugin_instance->registerNewScenario($some_scenario_setup, $some_scenario_teardown);
         });
     });
 });
