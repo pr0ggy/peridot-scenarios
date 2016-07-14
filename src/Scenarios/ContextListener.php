@@ -107,14 +107,13 @@ class ContextListener
      */
     public function hookScenariosIntoTest(AbstractTest $test)
     {
-        $test_scenarios = $this->test_scenario_map[$test];
-        if (empty($test_scenarios)) {
+        if (isset($this->test_scenario_map[$test]) === false || empty($this->test_scenario_map[$test])) {
             return;
         }
 
         $scenario_composite = new ScenarioComposite(
             $test,
-            $test_scenarios
+            $this->test_scenario_map[$test]
         );
 
         $test->addSetupFunction($scenario_composite->asSetupFunction());
