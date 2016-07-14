@@ -3,6 +3,7 @@
 use Mockery as m;
 use Peridot\Core\AbstractTest;
 use Peridot\Plugin\Scenarios\ContextListener;
+use Peridot\Plugin\Scenarios\Test\Doubles\TestSetupTeardownAdditionSpy;
 
 describe('Peridot\Plugin\Scenarios\ContextListener', function () {
 
@@ -104,20 +105,20 @@ describe('Peridot\Plugin\Scenarios\ContextListener', function () {
         });
 
         context('when at least 1 scenario is bound to the given test', function () {
-            xit('should add a setup function to the test that will execute the given scenarios against the test definition', function () {
-                $fake_test = m::mock('Peridot\Core\AbstractTest');
-                $fake_test->shouldReceive('addSetupFunction')->once();
-                $this->context_instance->enterNewActiveTestContext($fake_test);
-                for ($i = 0; $i < 5; ++$i) {
-                    $this->context_instance->addScenarioToContext(m::mock('Peridot\Plugin\Scenarios\Scenario'));
-                }
+            it('should add a setup and teardown function to the test that will allow execution of the associated scenarios against the test definition', function () {
+                $test_double = new TestSetupTeardownAdditionSpy('some test description', function () {});
+                $fake_scenario = m::mock('Peridot\Plugin\Scenarios\Scenario');
+                $fake_scenario->shouldReceive('setUpFunctionBoundTo')->andReturn(function () {});
+                $fake_scenario->shouldReceive('tearDownFunctionBoundTo')->andReturn(function () {});
 
-                $this->context_instance->hookScenariosIntoTest($fake_test);
+                $this->context_instance->enterNewActiveTestContext($test_double);
+                $this->context_instance->addScenarioToContext($fake_scenario);
+
+                $test_double->startWatchingSetupsAndTeardowns();
+                $this->context_instance->hookScenariosIntoTest($test_double);
                 $this->context_instance->exitActiveTestContext();
-            });
 
-            xit('should add a teardown function to the test that will clean up the last scenario to be tested', function () {
-
+                assert($test_double->setupAndTeardownFunctionsWereAdded());
             });
         });
     });

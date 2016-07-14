@@ -24,13 +24,16 @@ describe('convertValueToFizzBuzz($value)', function() {
         });
         inScenario(['expected_fizzbuzz_value'=>0]);
         inScenario(
-            setUp(function() { $this->expected_fizzbuzz_value = 15; })
+            setUp(function() { echo "S2S\n"; $this->expected_fizzbuzz_value = 15; }),
+            function () {echo "S2T\n";}
         );
         inScenario(
-            setUp(function() { $this->expected_fizzbuzz_value = 45; })
+            setUp(function() { echo "S3S\n";$this->expected_fizzbuzz_value = 45; }),
+            function () {echo "S3T\n";}
         );
         inScenario(
-            setUp(function() { $this->expected_fizzbuzz_value = 60; })
+            setUp(function() { echo "S4S\n";$this->expected_fizzbuzz_value = 60; }),
+            function () {echo "S4T\n";}
         );
     });
 
