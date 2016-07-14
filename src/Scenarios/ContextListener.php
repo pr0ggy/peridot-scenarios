@@ -78,7 +78,7 @@ class ContextListener
      * @param  Scenario $scenario
      * @throws \RuntimeException if there is no currently-active test context
      */
-    public function addScenarioToContext(Scenario $scenario)
+    public function addScenarioToTestContext(Scenario $scenario)
     {
         if (isset($this->last_test_added) === false) {
             throw new \RuntimeException('Can only add scenarios to test contexts');

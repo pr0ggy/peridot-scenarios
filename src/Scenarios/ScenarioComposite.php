@@ -59,8 +59,13 @@ class ScenarioComposite
 
     public function executeTestTeardown()
     {
-        $this->test->walkUp(function (TestInterface $test) {
-            $teardown_functions = array_slice($test->getTearDownFunctions(), 0, -1);
+        $test_being_executed_against_scenarios = $this->test;
+        $this->test->walkUp(function (TestInterface $test) use ($test_being_executed_against_scenarios) {
+            $teardown_functions = $test->getTearDownFunctions();
+            if ($test === $test_being_executed_against_scenarios) {
+                $teardown_functions = array_slice($teardown_functions, 0, -1);
+            }
+
             foreach ($teardown_functions as $teardown_function) {
                 $teardown_function();
             }
@@ -72,15 +77,20 @@ class ScenarioComposite
         $all_scenarios_except_last = array_slice($this->scenarios, 1, -1);
         foreach ($all_scenarios_except_last as $active_scenario) {
             $this->executeTestSetup();
-            $this->executeScenarioAgainstTestDefinition($active_scenario, $this->test);
+            $this->executeScenarioAgainstTestDefinition($active_scenario);
             $this->executeTestTeardown();
         }
     }
 
     public function executeTestSetup()
     {
-        $this->test->walkDown(function (TestInterface $test) {
-            $setup_functions = array_slice($test->getSetupFunctions(), 0, -1);
+        $test_being_executed_against_scenarios = $this->test;
+        $this->test->walkDown(function (TestInterface $test) use ($test_being_executed_against_scenarios)  {
+            $setup_functions = $test->getSetupFunctions();
+            if ($test === $test_being_executed_against_scenarios) {
+                $setup_functions = array_slice($setup_functions, 0, -1);
+            }
+
             foreach ($setup_functions as $setup_function) {
                 $setup_function();
             }

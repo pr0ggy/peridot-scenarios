@@ -1,6 +1,6 @@
 <?php
 /**
- * Unti tests for Peridot\Plugin\Scenarios\Plugin
+ * Unit tests for Peridot\Plugin\Scenarios\Plugin
  */
 
 use Mockery as m;
@@ -75,7 +75,7 @@ describe('Peridot\Plugin\Scenarios\Plugin', function () {
                 ->andReturn($some_scenario);
 
             $this->fake_context_listener
-                ->shouldReceive('addScenarioToContext')
+                ->shouldReceive('addScenarioToTestContext')
                 ->with($some_scenario);
 
             $this->plugin_instance->registerNewScenario($some_scenario_setup, $some_scenario_teardown);

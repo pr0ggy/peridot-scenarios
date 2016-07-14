@@ -1,6 +1,6 @@
 <?php
 /**
- * Unti tests for Peridot\Plugin\Scenarios\ScenarioFactory
+ * Unit tests for Peridot\Plugin\Scenarios\ScenarioFactory
  */
 
 use Mockery as m;
@@ -15,7 +15,7 @@ describe('Peridot\Plugin\Scenarios\ScenarioFactory', function () {
 
     describe('->createScenario($setup, $teardown)', function () {
         context('with callable $setup', function () {
-            it('leaves setup unchanged', function () {
+            it('should leave setup unchanged', function () {
                 $scenario =
                     $this->scenario_factory_spy
                         ->createScenario($this->callable_setup);
@@ -32,7 +32,7 @@ describe('Peridot\Plugin\Scenarios\ScenarioFactory', function () {
         });
 
         context('with a k/v map given as $setup', function () {
-            it('converts setup to callable', function () {
+            it('should convert setup to callable', function () {
                 $scenario =
                     $this->scenario_factory_spy
                         ->createScenario(['foo' => 'bar']);
@@ -42,7 +42,7 @@ describe('Peridot\Plugin\Scenarios\ScenarioFactory', function () {
         });
 
         context('with any other type given as $setup', function () {
-            it('throws a TypeError', function () {
+            it('should throw a TypeError', function () {
                 try {
                     $scenario =
                         $this->scenario_factory_spy
@@ -60,7 +60,7 @@ describe('Peridot\Plugin\Scenarios\ScenarioFactory', function () {
         });
 
         context('with callable $teardown', function () {
-            it('leaves teardown unchanged', function () {
+            it('should leave teardown unchanged', function () {
                 $scenario =
                     $this->scenario_factory_spy
                         ->createScenario([], $this->callable_teardown);
@@ -77,7 +77,7 @@ describe('Peridot\Plugin\Scenarios\ScenarioFactory', function () {
         });
 
         context('with null $teardown', function () {
-            it('generates a no-op teardown', function () {
+            it('should generate a no-op teardown', function () {
                 $scenario =
                     $this->scenario_factory_spy
                         ->createScenario([]);
@@ -87,7 +87,7 @@ describe('Peridot\Plugin\Scenarios\ScenarioFactory', function () {
         });
 
         context('with any other type given as $teardown', function () {
-            it('throws a TypeError', function () {
+            it('should throw a TypeError', function () {
                 try {
                     $scenario =
                         $this->scenario_factory_spy

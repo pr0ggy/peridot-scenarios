@@ -1,6 +1,6 @@
 <?php
 /**
- * Unti tests for Peridot\Plugin\Scenarios\Scenario
+ * Unit tests for Peridot\Plugin\Scenarios\Scenario
  */
 
 use Mockery as m;

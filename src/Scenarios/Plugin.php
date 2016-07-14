@@ -52,7 +52,7 @@ class Plugin
      */
     public function registerNewScenario($setup, callable $teardown = null)
     {
-        $this->peridot_context_listener->addScenarioToContext(
+        $this->peridot_context_listener->addScenarioToTestContext(
             $this->scenario_factory->createScenario($setup, $teardown)
         );
     }

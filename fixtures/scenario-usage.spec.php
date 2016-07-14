@@ -17,12 +17,20 @@ function convertValueToFizzBuzz($value)
 
 
 describe('convertValueToFizzBuzz($value)', function() {
+    beforeEach(function() { echo "root suite setup\n"; });
+    afterEach(function() { echo "root suite teardown\n"; });
 
     context('when $value is divisible by 3 and 5', function() {
+        beforeEach(function() { echo "nested context suite setup\n"; });
+        afterEach(function() { echo "nested context suite teardown\n"; });
+
         it('should return "FizzBuzz"', function() {
             assert(convertValueToFizzBuzz($this->expected_fizzbuzz_value) === 'FizzBuzz');
         });
-        inScenario(['expected_fizzbuzz_value'=>0]);
+        inScenario(
+            setUp(function() { echo "S1S\n"; $this->expected_fizzbuzz_value = 0; }),
+            function () {echo "S1T\n";}
+        );
         inScenario(
             setUp(function() { echo "S2S\n"; $this->expected_fizzbuzz_value = 15; }),
             function () {echo "S2T\n";}
