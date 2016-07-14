@@ -3,7 +3,6 @@
 namespace Peridot\Plugin\Scenarios;
 
 use Peridot\Core\Scope;
-use Closure;
 
 /**
  * Represents a specific context setup/teardown to be applied to a given test definition to
@@ -14,46 +13,47 @@ use Closure;
 class Scenario
 {
     /**
-     * @var callable
+     * @var ScenarioContextAction
      */
-    protected $setup_func;
+    protected $setup;
 
     /**
-     * @var callable
+     * @var ScenarioContextAction
      */
-    protected $teardown_func;
+    protected $teardown;
 
     /**
-     * @param callable $setup_func
-     * @param callable $teardown_func
+     * @param ScenarioContextAction $setup
+     * @param ScenarioContextAction $teardown
      */
-    public function __construct(callable $setup_func, callable $teardown_func)
+    public function __construct(ScenarioContextAction $setup, ScenarioContextAction $teardown)
     {
-        $this->setup_func = $setup_func;
-        $this->teardown_func = $teardown_func;
+        $this->setup = $setup;
+        $this->teardown = $teardown;
     }
 
     /**
-     * Returns the Scenario instance's setup function with the function's $this context bound to
+     * Executes the Scenario instance's setup action with the action context bound to
      * the given Scope argument
      *
      * @param Scope $scope
-     * @return callable
      */
-    public function setUpFunctionBoundTo(Scope $scope)
+    public function executeSetupInContext(Scope $scope)
     {
-        return Closure::bind($this->setup_func, $scope, $scope);
+        $context_bound_setup = $this->setup->inContext($scope);
+        $context_bound_setup();
     }
 
     /**
-     * Returns the Scenario instance's teardown function with the function's $this context bound to
+     * Executes the Scenario instance's teardown function with the action context bound to
      * the given Scope argument
      *
      * @param Scope $scope
-     * @return callable
+     * @return ScenarioContextAction
      */
-    public function tearDownFunctionBoundTo(Scope $scope)
+    public function executeTeardownInContext(Scope $scope)
     {
-        return Closure::bind($this->teardown_func, $scope, $scope);
+        $context_bound_teardown = $this->teardown->inContext($scope);
+        $context_bound_teardown();
     }
 }

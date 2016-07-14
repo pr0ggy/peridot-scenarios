@@ -21,7 +21,10 @@ class ScenarioFactory
     {
         $setup_func = $this->getScenarioSetupAsCallable($setup);
         $teardown_func = $this->getScenarioTeardownAsCallable($teardown);
-        return new Scenario($setup_func, $teardown_func);
+        return new Scenario(
+            new ScenarioContextAction($setup_func),
+            new ScenarioContextAction($teardown_func)
+        );
     }
 
     /**

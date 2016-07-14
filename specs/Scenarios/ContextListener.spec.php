@@ -30,7 +30,7 @@ describe('Peridot\Plugin\Scenarios\ContextListener', function () {
 
     describe('->enterNewActiveTestContext($test)', function () {
         it('should set the given test\'s scenario count to 0', function () {
-            $fake_test = Test\getFakeTest();
+            $fake_test = Test\createFakeTest();
             assert(isset($fake_test->explicitly_defined_scenario_count) === false);
 
             $this->context_instance->enterNewActiveTestContext($fake_test);
@@ -41,7 +41,7 @@ describe('Peridot\Plugin\Scenarios\ContextListener', function () {
     describe('->addScenarioToTestContext($scenario)', function () {
         context('when active test context exists', function () {
             it('should increment explicitly-defined scenario count on the active test context', function () {
-                $fake_test = Test\getFakeTest();
+                $fake_test = Test\createFakeTest();
                 $this->context_instance->enterNewActiveTestContext($fake_test);
                 assert($fake_test->explicitly_defined_scenario_count === 0);
 
@@ -72,7 +72,7 @@ describe('Peridot\Plugin\Scenarios\ContextListener', function () {
 
     describe('->exitActiveTestContext()', function () {
         it('should unset the active test context', function () {
-            $fake_test = Test\getFakeTest();
+            $fake_test = Test\createFakeTest();
             $this->context_instance->enterNewActiveTestContext($fake_test);
             $this->context_instance->addScenarioToTestContext(m::mock('Peridot\Plugin\Scenarios\Scenario'));
             assert($fake_test->explicitly_defined_scenario_count === 1);
@@ -93,7 +93,7 @@ describe('Peridot\Plugin\Scenarios\ContextListener', function () {
     describe('->hookScenariosIntoTest($test)', function () {
         context('when no scenarios are bound to the given test', function () {
             it('should not alter the test\'s setup or teardown function set', function () {
-                $fake_test = Test\getFakeTest();
+                $fake_test = Test\createFakeTest();
                 $fake_test->shouldNotReceive('addSetupFunction');
                 $fake_test->shouldNotReceive('addTearDownFunction');
 
@@ -109,8 +109,8 @@ describe('Peridot\Plugin\Scenarios\ContextListener', function () {
             it('should add a setup and teardown function to the test that will allow execution of the associated scenarios against the test definition', function () {
                 $test_double = new TestSetupTeardownAdditionSpy('some test description', function () {});
                 $fake_scenario = m::mock('Peridot\Plugin\Scenarios\Scenario');
-                $fake_scenario->shouldReceive('setUpFunctionBoundTo')->andReturn(function () {});
-                $fake_scenario->shouldReceive('tearDownFunctionBoundTo')->andReturn(function () {});
+                $fake_scenario->shouldReceive('executeSetupInContext')->andReturn(function () {});
+                $fake_scenario->shouldReceive('executeTeardownInContext')->andReturn(function () {});
 
                 $this->context_instance->enterNewActiveTestContext($test_double);
                 $this->context_instance->addScenarioToTestContext($fake_scenario);

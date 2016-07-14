@@ -35,12 +35,11 @@ class Plugin
      * @param ContextListener       $peridot_context_listener
      * @param AbstractReporter      $scenario_reporter
      */
-    public function __construct(
+    protected function __construct(
         ScenarioFactory $scenario_factory,
         ContextListener $peridot_context_listener,
         AbstractReporter $scenario_reporter
     ) {
-        self::verifyInstanceNotYetRegistered();
         $this->scenario_factory = $scenario_factory;
         $this->peridot_context_listener = $peridot_context_listener;
         $this->scenario_reporter = $scenario_reporter;

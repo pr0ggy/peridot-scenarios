@@ -4,39 +4,52 @@
  */
 
 use Mockery as m;
+use Peridot\Plugin\Scenarios\Test;
 use Peridot\Plugin\Scenarios\Scenario;
+use Peridot\Plugin\Scenarios\ScenarioContextAction;
 use function Peridot\Plugin\Scenarios\getNoOp;
 
 describe('Peridot\Plugin\Scenarios\Scenario', function () {
-    describe('->setUpFunctionBoundTo($scope)', function () {
-        it('should return the scenario setup function context-bound to a given Scope', function () {
-            $fake_scope = m::mock('\Peridot\Core\Scope');
-            $setup_function = function () {
-                $this->foo = 'bar';
-            };
-            $some_teardown_function = getNoOp();
-            $scenario = new Scenario($setup_function, $some_teardown_function);
 
-            $bound_setup = $scenario->setUpFunctionBoundTo($fake_scope);
-            $bound_setup();
+    beforeEach(function () {
+        $this->fake_scope = m::mock('Peridot\Core\Scope');
+        $this->fake_setup_action = Test\createFakeScenarioContextAction();
+        $this->fake_teardown_action = Test\createFakeScenarioContextAction();
+        $this->scenario = new Scenario(
+            $this->fake_setup_action,
+            $this->fake_teardown_action
+        );
+    });
 
-            assert($fake_scope->foo === 'bar');
+    afterEach(function () {
+        m::close();
+    });
+
+    describe('->executeSetupInContext($scope)', function () {
+        it('should execute the setup action within the given scope context', function () {
+            $mock_context_applied_action = Test\createFakeScenarioContextAction();
+            $mock_context_applied_action->shouldReceive('__invoke')->once();
+            $this->fake_setup_action
+                ->shouldReceive('inContext')
+                ->once()
+                ->with($this->fake_scope)
+                ->andReturn($mock_context_applied_action);
+
+            $this->scenario->executeSetupInContext($this->fake_scope);
         });
     });
 
-    describe('->tearDownFunctionBoundTo($scope)', function () {
-        it('should return the scenario teardown function context-bound to a given Scope', function () {
-            $fake_scope = m::mock('\Peridot\Core\Scope');
-            $some_setup_function = getNoOp();
-            $teardown_function = function () {
-                $this->foo = 'bar';
-            };
-            $scenario = new Scenario($some_setup_function, $teardown_function);
+    describe('->executeTeardownInContext($scope)', function () {
+        it('should execute the teardown action within the given scope context', function () {
+            $mock_context_applied_action = Test\createFakeScenarioContextAction();
+            $mock_context_applied_action->shouldReceive('__invoke')->once();
+            $this->fake_teardown_action
+                ->shouldReceive('inContext')
+                ->once()
+                ->with($this->fake_scope)
+                ->andReturn($mock_context_applied_action);
 
-            $bound_teardown = $scenario->tearDownFunctionBoundTo($fake_scope);
-            $bound_teardown();
-
-            assert($fake_scope->foo === 'bar');
+            $this->scenario->executeTeardownInContext($this->fake_scope);
         });
     });
 });

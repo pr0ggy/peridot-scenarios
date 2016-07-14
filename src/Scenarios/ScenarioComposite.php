@@ -31,23 +31,30 @@ class ScenarioComposite
             case 0:
                 return getNoOp();
             case 1:
-                return $this->scenarios[0]->setUpFunctionBoundTo($this->test_scope);
+                return $this->getFirstScenarioSetupFunction();
 
             default:
                 return $this->getMultiScenarioCompositeSetupFunction();
         }
     }
 
+    protected function getFirstScenarioSetupFunction()
+    {
+        $first_scenario = $this->scenarios[0];
+        $test_scope = $this->test_scope;
+        return new ScenarioContextAction(function () use ($first_scenario, $test_scope) {
+            $first_scenario->executeSetupInContext($test_scope);
+        });
+    }
+
     protected function getMultiScenarioCompositeSetupFunction()
     {
-        $test_scope = $this->test_scope;
-        $scenarios = $this->scenarios;
         $scenario_composite = $this;
-        return function () use ($scenario_composite, $test_scope, $scenarios) {
+        return new ScenarioContextAction(function () use ($scenario_composite) {
             $scenario_composite->executeFirstScenarioAgainstTestDefinition();
             $scenario_composite->executeRemainingScenariosExceptLastAgainstTestDefinition();
             $scenario_composite->prepareForLastScenarioToBeExecutedAgainstTestDefinition();
-        };
+        });
     }
 
     public function executeFirstScenarioAgainstTestDefinition()
@@ -59,14 +66,13 @@ class ScenarioComposite
 
     public function executeTestTeardown()
     {
-        $test_being_executed_against_scenarios = $this->test;
-        $this->test->walkUp(function (TestInterface $test) use ($test_being_executed_against_scenarios) {
+        $this->test->walkUp(function (TestInterface $test) {
             $teardown_functions = $test->getTearDownFunctions();
-            if ($test === $test_being_executed_against_scenarios) {
-                $teardown_functions = array_slice($teardown_functions, 0, -1);
-            }
 
             foreach ($teardown_functions as $teardown_function) {
+                if ($teardown_function instanceof ScenarioContextAction) {
+                    continue;
+                }
                 $teardown_function();
             }
         });
@@ -84,14 +90,13 @@ class ScenarioComposite
 
     public function executeTestSetup()
     {
-        $test_being_executed_against_scenarios = $this->test;
-        $this->test->walkDown(function (TestInterface $test) use ($test_being_executed_against_scenarios)  {
+        $this->test->walkDown(function (TestInterface $test) {
             $setup_functions = $test->getSetupFunctions();
-            if ($test === $test_being_executed_against_scenarios) {
-                $setup_functions = array_slice($setup_functions, 0, -1);
-            }
 
             foreach ($setup_functions as $setup_function) {
+                if ($setup_function instanceof ScenarioContextAction) {
+                    continue;
+                }
                 $setup_function();
             }
         });
@@ -99,13 +104,10 @@ class ScenarioComposite
 
     protected function executeScenarioAgainstTestDefinition(Scenario $scenario)
     {
-        $scenario_setup = $scenario->setUpFunctionBoundTo($this->test_scope);
-        $scenario_teardown = $scenario->tearDownFunctionBoundTo($this->test_scope);
-
         try {
-            $scenario_setup();
+            $scenario->executeSetupInContext($this->test_scope);
             ($this->test_definition)();
-            $scenario_teardown();
+            $scenario->executeTeardownInContext($this->test_scope);
         } catch (\Exception $e) {
             $e->failed_scenario_index = $scenario->index;
             throw $e;
@@ -114,10 +116,9 @@ class ScenarioComposite
 
     public function prepareForLastScenarioToBeExecutedAgainstTestDefinition()
     {
-        $last_scenario = $this->scenarios[count($this->scenarios) - 1];
-        $last_scenario_setup = $last_scenario->setUpFunctionBoundTo($this->test_scope);
         $this->executeTestSetup();
-        $last_scenario_setup();
+        $last_scenario = $this->scenarios[count($this->scenarios) - 1];
+        $last_scenario->executeSetupInContext($this->test_scope);
     }
 
     public function asTearDownFunction()
@@ -127,9 +128,9 @@ class ScenarioComposite
         }
 
         $last_scenario = $this->scenarios[count($this->scenarios) - 1];
-        $last_scenario_teardown = $last_scenario->tearDownFunctionBoundTo($this->test->getScope());
-        return function () use ($last_scenario_teardown) {
-            $last_scenario_teardown();
-        };
+        $test_scope = $this->test_scope;
+        return new ScenarioContextAction(function () use ($last_scenario, $test_scope) {
+            $last_scenario->executeTeardownInContext($test_scope);
+        });
     }
 }
