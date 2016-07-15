@@ -20,6 +20,14 @@ function createFakeTestWithScope($scope)
     return $fake_test;
 }
 
+function createFakeTestWithSetupAndTeardownActions(array $setups, array $teardowns)
+{
+    $fake_test = m::mock('Peridot\Core\AbstractTest')->shouldIgnoreMissing();
+    $fake_test->shouldReceive('getSetupFunctions')->andReturn($setups);
+    $fake_test->shouldReceive('getTearDownFunctions')->andReturn($teardowns);
+    return $fake_test;
+}
+
 function createFakeScenarioContextAction()
 {
     return m::mock('Peridot\Plugin\Scenarios\ScenarioContextAction');

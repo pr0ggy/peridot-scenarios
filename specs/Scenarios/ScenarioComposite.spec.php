@@ -6,6 +6,7 @@
 use Mockery as m;
 use Peridot\Plugin\Scenarios\ScenarioComposite;
 use Peridot\Plugin\Scenarios\Test\Doubles\ScenarioCompositeExplicitTestSetupAndTeardownDouble;
+use Peridot\Plugin\Scenarios\Test\Doubles\TestNodeWalkingCallableRecordingDouble;
 use Peridot\Plugin\Scenarios\Test;
 use function Peridot\Plugin\Scenarios\getNoOp;
 
@@ -22,8 +23,8 @@ describe('Peridot\Plugin\Scenarios\ScenarioComposite', function () {
     describe('->asSetupFunction()', function () {
         context('when no scenarios given', function () {
             it('should return a no-op function', function () {
-                $composite = new ScenarioComposite(Test\createFakeTest(), []);
-                assert(is_callable($composite->asSetupFunction()));
+                $scenario_composite_under_test = new ScenarioComposite(Test\createFakeTest(), []);
+                assert(is_callable($scenario_composite_under_test->asSetupFunction()));
             });
         });
 
@@ -37,8 +38,8 @@ describe('Peridot\Plugin\Scenarios\ScenarioComposite', function () {
                     ->once()
                     ->with($fake_scope);
 
-                $composite = new ScenarioComposite($fake_test, [$mock_scenario]);
-                $composite_as_setup = $composite->asSetupFunction();
+                $scenario_composite_under_test = new ScenarioComposite($fake_test, [$mock_scenario]);
+                $composite_as_setup = $scenario_composite_under_test->asSetupFunction();
                 $composite_as_setup();
             });
         });
@@ -138,19 +139,75 @@ describe('Peridot\Plugin\Scenarios\ScenarioComposite', function () {
     });
 
     describe('->executeTestTeardown()', function () {
-        xit('should....', function () {
+        it('should pass a test tree walking callback that executes all test teardowns that aren\'t ScenarioContextActions', function () {
             $test_scope = $this;
-            $scenario_composite_under_test =
-                new ScenarioCompositeExplicitTestSetupAndTeardownDouble(
-                    createFakeTestWithEventReportingDefinition($test_scope),
-                    createNFakeEventReportingScenarios($this->scenario_count, $test_scope),
-                    createExecutionEventReportingFunctionInScope('test context setup', $test_scope),
-                    createExecutionEventReportingFunctionInScope('test context teardown', $test_scope)
-                );
+            $some_setup_functions = [];
+            $fake_test_with_scenario_teardown_actions = Test\createFakeTestWithSetupAndTeardownActions(
+                $some_setup_functions,
+                createCallableSetIncludingAScenarioSetupActionThatShouldntBeCalled($test_scope)
+            );
+            $some_scenarios = [];
+            $test_walking_double = new TestNodeWalkingCallableRecordingDouble();
+            $scenario_composite_under_test = new ScenarioComposite(
+                $test_walking_double,
+                $some_scenarios
+            );
+
+            $scenario_composite_under_test->executeTestTeardown();
+
+            $callback = $test_walking_double->getLastWalkUpExecutionCallback();
+            $callback($fake_test_with_scenario_teardown_actions);
         });
     });
 
+    describe('->executeRemainingScenariosExceptLastAgainstTestDefinition()', function () {
+        it('TODO: should do something');
+    });
+
+    describe('->executeTestSetup()', function () {
+        it('should pass a test tree walking callback that executes all test setups that aren\'t ScenarioContextActions', function () {
+            $test_scope = $this;
+            $some_teardown_functions = [];
+            $fake_test_with_scenario_setup_actions = Test\createFakeTestWithSetupAndTeardownActions(
+                createCallableSetIncludingAScenarioSetupActionThatShouldntBeCalled($test_scope),
+                $some_teardown_functions
+            );
+            $some_scenarios = [];
+            $test_walking_double = new TestNodeWalkingCallableRecordingDouble();
+            $scenario_composite_under_test = new ScenarioComposite(
+                $test_walking_double,
+                $some_scenarios
+            );
+
+            $scenario_composite_under_test->executeTestSetup();
+
+            $callback = $test_walking_double->getLastWalkDownExecutionCallback();
+            $callback($fake_test_with_scenario_setup_actions);
+        });
+    });
+
+    describe('->prepareForLastScenarioToBeExecutedAgainstTestDefinition()', function () {
+        it('TODO: should do something');
+    });
+
+    describe('->asTearDownFunction()', function () {
+        it('TODO: should do something');
+    });
+
 });
+
+function createCallableSetIncludingAScenarioSetupActionThatShouldntBeCalled($test_scope)
+{
+    $scenario_action_that_shouldnt_be_called = m::mock('Peridot\Plugin\Scenarios\ScenarioContextAction');
+    $scenario_action_that_shouldnt_be_called->shouldNotReceive('__invoke');
+
+    return [
+        createExecutionEventReportingFunctionInScope('callable 1', $test_scope),
+        createExecutionEventReportingFunctionInScope('callable 2', $test_scope),
+        createExecutionEventReportingFunctionInScope('callable 3', $test_scope),
+        $scenario_action_that_shouldnt_be_called
+    ];
+}
 
 function createExecutionEventReportingFunctionInScope($event_message, $test_scope)
 {
@@ -172,7 +229,8 @@ function createFakeTestWithEventReportingDefinition($test_scope)
     return $fake_test;
 }
 
-function createNFakeEventReportingScenarios($n, $test_scope) {
+function createNFakeEventReportingScenarios($n, $test_scope)
+{
     $fake_scenarios = [];
     for ($i = 1; $i <= $n; ++$i) {
         $fake_scenarios[] = Test\createFakeScenarioWithSetupAndTeardownFuncs(

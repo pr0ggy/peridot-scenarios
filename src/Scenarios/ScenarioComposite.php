@@ -66,16 +66,18 @@ class ScenarioComposite
 
     public function executeTestTeardown()
     {
-        $this->test->walkUp(function (TestInterface $test) {
-            $teardown_functions = $test->getTearDownFunctions();
+        $this->test->walkUp(
+            function (TestInterface $test) {
+                $teardown_functions = $test->getTearDownFunctions();
 
-            foreach ($teardown_functions as $teardown_function) {
-                if ($teardown_function instanceof ScenarioContextAction) {
-                    continue;
+                foreach ($teardown_functions as $teardown_function) {
+                    if ($teardown_function instanceof ScenarioContextAction) {
+                        continue;
+                    }
+                    $teardown_function();
                 }
-                $teardown_function();
             }
-        });
+        );
     }
 
     public function executeRemainingScenariosExceptLastAgainstTestDefinition()
@@ -90,16 +92,18 @@ class ScenarioComposite
 
     public function executeTestSetup()
     {
-        $this->test->walkDown(function (TestInterface $test) {
-            $setup_functions = $test->getSetupFunctions();
+        $this->test->walkDown(
+            function (TestInterface $test) {
+                $setup_functions = $test->getSetupFunctions();
 
-            foreach ($setup_functions as $setup_function) {
-                if ($setup_function instanceof ScenarioContextAction) {
-                    continue;
+                foreach ($setup_functions as $setup_function) {
+                    if ($setup_function instanceof ScenarioContextAction) {
+                        continue;
+                    }
+                    $setup_function();
                 }
-                $setup_function();
             }
-        });
+        );
     }
 
     protected function executeScenarioAgainstTestDefinition(Scenario $scenario)
