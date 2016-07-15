@@ -116,7 +116,7 @@ class ContextListener
             $this->test_scenario_map[$test]
         );
 
-        $test->addSetupFunction($scenario_composite->asSetupFunction());
-        $test->addTearDownFunction($scenario_composite->asTearDownFunction());
+        $test->addSetupFunction($scenario_composite->asCallableSetupHook());
+        $test->addTearDownFunction($scenario_composite->asCallableTearDownHook());
     }
 }

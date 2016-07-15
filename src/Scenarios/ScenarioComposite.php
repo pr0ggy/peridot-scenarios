@@ -2,22 +2,39 @@
 
 namespace Peridot\Plugin\Scenarios;
 
-use Peridot\EventEmitterInterface;
 use Peridot\Core\HasEventEmitterTrait;
 use Peridot\Core\TestInterface;
-use Peridot\Core\AbstractTest;
 
+/**
+ * Represents a set of scenarios to be executed against a given test defintion.
+ */
 class ScenarioComposite
 {
+    /**
+     * @var TestInterface
+     */
     protected $test;
 
+    /**
+     * @var callable
+     */
     protected $test_definition;
 
+    /**
+     * @var \Peridot\Core\Scope
+     */
     protected $test_scope;
 
+    /**
+     * @var array
+     */
     protected $scenarios;
 
-    public function __construct(AbstractTest $test, array $scenarios = [])
+    /**
+     * @param TestInterface $test
+     * @param array         $scenarios
+     */
+    public function __construct(TestInterface $test, array $scenarios = [])
     {
         $this->test = $test;
         $this->test_definition = $test->getDefinition();
@@ -25,20 +42,20 @@ class ScenarioComposite
         $this->scenarios = $scenarios;
     }
 
-    public function asSetupFunction()
+    public function asCallableSetupHook()
     {
         switch (count($this->scenarios)) {
             case 0:
                 return getNoOp();
             case 1:
-                return $this->getFirstScenarioSetupFunction();
+                return $this->getFirstScenarioSetupCallable();
 
             default:
-                return $this->getMultiScenarioCompositeSetupFunction();
+                return $this->getMultiScenarioCompositeSetupCallable();
         }
     }
 
-    protected function getFirstScenarioSetupFunction()
+    protected function getFirstScenarioSetupCallable()
     {
         $first_scenario = $this->scenarios[0];
         $test_scope = $this->test_scope;
@@ -47,7 +64,7 @@ class ScenarioComposite
         });
     }
 
-    protected function getMultiScenarioCompositeSetupFunction()
+    protected function getMultiScenarioCompositeSetupCallable()
     {
         $scenario_composite = $this;
         return new ScenarioContextAction(function () use ($scenario_composite) {
@@ -125,7 +142,7 @@ class ScenarioComposite
         $last_scenario->executeSetupInContext($this->test_scope);
     }
 
-    public function asTearDownFunction()
+    public function asCallableTearDownHook()
     {
         if (empty($this->scenarios)) {
             return getNoOp();

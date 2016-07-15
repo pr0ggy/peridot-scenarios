@@ -7,6 +7,7 @@ use Mockery as m;
 use Peridot\Plugin\Scenarios\ScenarioComposite;
 use Peridot\Plugin\Scenarios\Test\Doubles\ScenarioCompositeExplicitTestSetupAndTeardownDouble;
 use Peridot\Plugin\Scenarios\Test\Doubles\TestNodeWalkingCallableRecordingDouble;
+use Peridot\Plugin\Scenarios\ScenarioContextAction;
 use Peridot\Plugin\Scenarios\Test;
 use function Peridot\Plugin\Scenarios\getNoOp;
 
@@ -20,16 +21,16 @@ describe('Peridot\Plugin\Scenarios\ScenarioComposite', function () {
         m::close();
     });
 
-    describe('->asSetupFunction()', function () {
+    describe('->asCallableSetupHook()', function () {
         context('when no scenarios given', function () {
             it('should return a no-op function', function () {
                 $scenario_composite_under_test = new ScenarioComposite(Test\createFakeTest(), []);
-                assert(is_callable($scenario_composite_under_test->asSetupFunction()));
+                assert(is_callable($scenario_composite_under_test->asCallableSetupHook()));
             });
         });
 
         context('when 1 scenario given', function () {
-            it('should execute the lone scenario\'s setup function bound to the given test scope', function () {
+            it('should return a ScenarioContextAction that executes the lone scenario\'s setup action bound to the given test scope', function () {
                 $fake_scope = m::mock('Peridot\Core\Scope');
                 $fake_test = Test\createFakeTestWithScope($fake_scope);
                 $mock_scenario = Test\createFakeScenario();
@@ -39,13 +40,14 @@ describe('Peridot\Plugin\Scenarios\ScenarioComposite', function () {
                     ->with($fake_scope);
 
                 $scenario_composite_under_test = new ScenarioComposite($fake_test, [$mock_scenario]);
-                $composite_as_setup = $scenario_composite_under_test->asSetupFunction();
+                $composite_as_setup = $scenario_composite_under_test->asCallableSetupHook();
+                assert($composite_as_setup instanceof ScenarioContextAction);
                 $composite_as_setup();
             });
         });
 
         context('when more than 1 scenario given', function () {
-            it('should generate a function which executes N-1 scenarios and runs setup for Nth scenario', function () {
+            it('should generate a ScenarioContextAction which executes N-1 scenarios and runs setup for Nth scenario', function () {
                 $test_scope = $this;
                 $scenario_composite_under_test =
                     new ScenarioCompositeExplicitTestSetupAndTeardownDouble(
@@ -55,58 +57,59 @@ describe('Peridot\Plugin\Scenarios\ScenarioComposite', function () {
                         createExecutionEventReportingFunctionInScope('test context teardown', $test_scope)
                     );
 
-                $generated_function = $scenario_composite_under_test->asSetupFunction();
+                $composite_as_setup = $scenario_composite_under_test->asCallableSetupHook();
+                assert($composite_as_setup instanceof ScenarioContextAction);
 
-                $generated_function();
+                $composite_as_setup();
 
                 assert($this->execution_events === $this->expected_execution_events);
             });
             inScenario([
                 'scenario_count' => 2,
                 'expected_execution_events' => [
-                        'scenario 1 setup',
-                        'test definition',
-                        'scenario 1 teardown',
-                        'test context teardown',
-                        'test context setup',
-                        'scenario 2 setup'
+                    'scenario 1 setup',
+                    'test definition',
+                    'scenario 1 teardown',
+                    'test context teardown',
+                    'test context setup',
+                    'scenario 2 setup'
                 ]
             ]);
             inScenario([
                 'scenario_count' => 3,
                 'expected_execution_events' => [
-                        'scenario 1 setup',
-                        'test definition',
-                        'scenario 1 teardown',
-                        'test context teardown',
-                        'test context setup',
-                        'scenario 2 setup',
-                        'test definition',
-                        'scenario 2 teardown',
-                        'test context teardown',
-                        'test context setup',
-                        'scenario 3 setup'
+                    'scenario 1 setup',
+                    'test definition',
+                    'scenario 1 teardown',
+                    'test context teardown',
+                    'test context setup',
+                    'scenario 2 setup',
+                    'test definition',
+                    'scenario 2 teardown',
+                    'test context teardown',
+                    'test context setup',
+                    'scenario 3 setup'
                 ]
             ]);
             inScenario([
                 'scenario_count' => 4,
                 'expected_execution_events' => [
-                        'scenario 1 setup',
-                        'test definition',
-                        'scenario 1 teardown',
-                        'test context teardown',
-                        'test context setup',
-                        'scenario 2 setup',
-                        'test definition',
-                        'scenario 2 teardown',
-                        'test context teardown',
-                        'test context setup',
-                        'scenario 3 setup',
-                        'test definition',
-                        'scenario 3 teardown',
-                        'test context teardown',
-                        'test context setup',
-                        'scenario 4 setup'
+                    'scenario 1 setup',
+                    'test definition',
+                    'scenario 1 teardown',
+                    'test context teardown',
+                    'test context setup',
+                    'scenario 2 setup',
+                    'test definition',
+                    'scenario 2 teardown',
+                    'test context teardown',
+                    'test context setup',
+                    'scenario 3 setup',
+                    'test definition',
+                    'scenario 3 teardown',
+                    'test context teardown',
+                    'test context setup',
+                    'scenario 4 setup'
                 ]
             ]);
         });
@@ -161,7 +164,49 @@ describe('Peridot\Plugin\Scenarios\ScenarioComposite', function () {
     });
 
     describe('->executeRemainingScenariosExceptLastAgainstTestDefinition()', function () {
-        it('TODO: should do something');
+        it('should...do that...', function () {
+            $test_scope = $this;
+            $scenario_composite_under_test =
+                new ScenarioCompositeExplicitTestSetupAndTeardownDouble(
+                    createFakeTestWithEventReportingDefinition($test_scope),
+                    createNFakeEventReportingScenarios($this->scenario_count, $test_scope),
+                    createExecutionEventReportingFunctionInScope('test context setup', $test_scope),
+                    createExecutionEventReportingFunctionInScope('test context teardown', $test_scope)
+                );
+
+            $scenario_composite_under_test->executeRemainingScenariosExceptLastAgainstTestDefinition();
+
+            assert($this->execution_events === $this->expected_execution_events);
+        });
+        inScenario([
+            'scenario_count' => 2,
+            'expected_execution_events' => []
+        ]);
+        inScenario([
+            'scenario_count' => 3,
+            'expected_execution_events' => [
+                'test context setup',
+                'scenario 2 setup',
+                'test definition',
+                'scenario 2 teardown',
+                'test context teardown',
+            ]
+        ]);
+        inScenario([
+            'scenario_count' => 4,
+            'expected_execution_events' => [
+                'test context setup',
+                'scenario 2 setup',
+                'test definition',
+                'scenario 2 teardown',
+                'test context teardown',
+                'test context setup',
+                'scenario 3 setup',
+                'test definition',
+                'scenario 3 teardown',
+                'test context teardown'
+            ]
+        ]);
     });
 
     describe('->executeTestSetup()', function () {
@@ -187,11 +232,59 @@ describe('Peridot\Plugin\Scenarios\ScenarioComposite', function () {
     });
 
     describe('->prepareForLastScenarioToBeExecutedAgainstTestDefinition()', function () {
-        it('TODO: should do something');
+        it('should run the test setup and the setup of the final scenario', function () {
+            $test_scope = $this;
+            $scenario_composite_under_test =
+                new ScenarioCompositeExplicitTestSetupAndTeardownDouble(
+                    createFakeTestWithEventReportingDefinition($test_scope),
+                    createNFakeEventReportingScenarios($this->scenario_count, $test_scope),
+                    createExecutionEventReportingFunctionInScope('test context setup', $test_scope),
+                    createExecutionEventReportingFunctionInScope('test context teardown', $test_scope)
+                );
+
+            $scenario_composite_under_test->prepareForLastScenarioToBeExecutedAgainstTestDefinition();
+
+            assert($this->execution_events === $this->expected_execution_events);
+        });
+        inScenario([
+            'scenario_count' => 2,
+            'expected_execution_events' => [
+                'test context setup',
+                'scenario 2 setup'
+            ]
+        ]);
+        inScenario([
+            'scenario_count' => 3,
+            'expected_execution_events' => [
+                'test context setup',
+                'scenario 3 setup'
+            ]
+        ]);
+        inScenario([
+            'scenario_count' => 4,
+            'expected_execution_events' => [
+                'test context setup',
+                'scenario 4 setup'
+            ]
+        ]);
     });
 
-    describe('->asTearDownFunction()', function () {
-        it('TODO: should do something');
+    describe('->asCallableTearDownHook()', function () {
+        context('when no scenarios given', function () {
+            it('should return a no-op callable', function () {
+                $fake_scope = m::mock('Peridot\Core\Scope');
+                $fake_test = Test\createFakeTestWithScope($fake_scope);
+
+                $scenario_composite_under_test = new ScenarioComposite($fake_test, []);
+                $teardown_hook = $scenario_composite_under_test->asCallableTearDownHook();
+                $teardown_hook();
+                assert(empty($this->execution_events));
+            });
+        });
+
+        context('when at least 1 scenario given', function () {
+            it('should return a ScenarioContextAction that executes the final scenario teardown');
+        });
     });
 
 });
