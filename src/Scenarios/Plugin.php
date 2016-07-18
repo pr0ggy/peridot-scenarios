@@ -3,7 +3,7 @@
 namespace Peridot\Plugin\Scenarios;
 
 use Peridot\EventEmitterInterface;
-use Peridot\Plugin\Scenarios\Reporting\AbstractReporter;
+use Peridot\Plugin\Scenarios\Reporter;
 use Mockleton\MockableSingletonBehavior;
 
 /**
@@ -18,17 +18,17 @@ class Plugin
     /**
      * @var ContextListener
      */
-    protected $peridot_context_listener;
+    private $peridot_context_listener;
 
     /**
      * @var Reporters\AbstractReporter
      */
-    protected $scenario_reporter;
+    private $scenario_reporter;
 
     /**
      * @var ScenarioFactory
      */
-    protected $scenario_factory;
+    private $scenario_factory;
 
     /**
      * @param ScenarioFactory       $scenario_factory
@@ -38,7 +38,7 @@ class Plugin
     protected function __construct(
         ScenarioFactory $scenario_factory,
         ContextListener $peridot_context_listener,
-        AbstractReporter $scenario_reporter
+        Reporter $scenario_reporter
     ) {
         $this->scenario_factory = $scenario_factory;
         $this->peridot_context_listener = $peridot_context_listener;

@@ -20,12 +20,12 @@ class ContextListener
     /**
      * @var \SplObjectStorage
      */
-    protected $test_scenario_map;
+    private $test_scenario_map;
 
     /**
      * @var AbstractTest
      */
-    protected $last_test_added;
+    private $last_test_added;
 
     /**
      * @param EventEmitterInterface $event_emitter
