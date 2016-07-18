@@ -10,6 +10,6 @@ return function (EventEmitterInterface $event_emitter)
     Scenarios\Plugin::createAndRegisterSingletonWithConstructionArgs(
         new Scenarios\ScenarioFactory(),
         new Scenarios\ContextListener($event_emitter),
-        new Scenarios\Reporters\SpecReporter($event_emitter)
+        new Scenarios\Reporting\SpecReporter($event_emitter)
     );
 };

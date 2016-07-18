@@ -4,6 +4,7 @@ namespace Peridot\Plugin\Scenarios;
 
 /**
  * Handles creation and configuration of new scenarios based on given setup and teardown entities.
+ * TODO: Revisit this, testing methodologies feel off
  *
  * @package Peridot\Plugin\Scenarios
  */

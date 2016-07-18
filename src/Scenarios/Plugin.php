@@ -3,7 +3,7 @@
 namespace Peridot\Plugin\Scenarios;
 
 use Peridot\EventEmitterInterface;
-use Peridot\Plugin\Scenarios\Reporters\AbstractReporter;
+use Peridot\Plugin\Scenarios\Reporting\AbstractReporter;
 use Mockleton\MockableSingletonBehavior;
 
 /**

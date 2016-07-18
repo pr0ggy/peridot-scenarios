@@ -283,7 +283,41 @@ describe('Peridot\Plugin\Scenarios\ScenarioComposite', function () {
         });
 
         context('when at least 1 scenario given', function () {
-            it('should return a ScenarioContextAction that executes the final scenario teardown');
+            it('should return a ScenarioContextAction that executes the final scenario teardown', function () {
+                $test_scope = $this;
+                $scenario_composite_under_test =
+                    new ScenarioCompositeExplicitTestSetupAndTeardownDouble(
+                        createFakeTestWithEventReportingDefinition($test_scope),
+                        createNFakeEventReportingScenarios($this->scenario_count, $test_scope),
+                        createExecutionEventReportingFunctionInScope('test context setup', $test_scope),
+                        createExecutionEventReportingFunctionInScope('test context teardown', $test_scope)
+                    );
+
+                $composite_as_setup = $scenario_composite_under_test->asCallableTearDownHook();
+                assert($composite_as_setup instanceof ScenarioContextAction);
+
+                $composite_as_setup();
+
+                assert($this->execution_events === $this->expected_execution_events);
+            });
+            inScenario([
+                'scenario_count'=>1,
+                'expected_execution_events' => [
+                    'scenario 1 teardown'
+                ]
+            ]);
+            inScenario([
+                'scenario_count'=>2,
+                'expected_execution_events' => [
+                    'scenario 2 teardown'
+                ]
+            ]);
+            inScenario([
+                'scenario_count'=>3,
+                'expected_execution_events' => [
+                    'scenario 3 teardown'
+                ]
+            ]);
         });
     });
 

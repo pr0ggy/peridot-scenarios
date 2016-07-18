@@ -4,6 +4,12 @@ namespace Peridot\Plugin\Scenarios\Test\Doubles;
 
 use Peridot\Core\Test;
 
+/**
+ * Peridot\Core\Test double which simply records the callback arguments provided to the
+ * walkUp and walkdDown methods
+ *
+ * @package Peridot\Plugin\Scenarios\Test\Doubles
+ */
 class TestNodeWalkingCallableRecordingDouble extends Test
 {
     protected $last_walkup_execution_callback;

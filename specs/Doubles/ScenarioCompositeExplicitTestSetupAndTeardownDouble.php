@@ -5,6 +5,12 @@ namespace Peridot\Plugin\Scenarios\Test\Doubles;
 use Peridot\Plugin\Scenarios\ScenarioComposite;
 use Peridot\Core\AbstractTest;
 
+/**
+ * Peridot\Plugin\Scenarios\ScenarioComposite double which overrides the executeTestTeardown
+ * and executeTestSetup methods to simply execute a given function, respectively
+ *
+ * @package Peridot\Plugin\Scenarios\Test\Doubles
+ */
 class ScenarioCompositeExplicitTestSetupAndTeardownDouble extends ScenarioComposite
 {
     protected $test_setup_fn;

@@ -1,4 +1,7 @@
 <?php
+/**
+ * Unit tests for Peridot\Plugin\Scenarios\ContextListener
+ */
 
 use Mockery as m;
 use Peridot\Core\AbstractTest;

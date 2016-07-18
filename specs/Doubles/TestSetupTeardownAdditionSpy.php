@@ -4,6 +4,11 @@ namespace Peridot\Plugin\Scenarios\Test\Doubles;
 
 use Peridot\Core\Test;
 
+/**
+ * Peridot\Core\Test double which watches for the addition of setup and teardown functions
+ *
+ * @package Peridot\Plugin\Scenarios\Test\Doubles
+ */
 class TestSetupTeardownAdditionSpy extends Test
 {
     protected $watching_setup_teardowns = false;

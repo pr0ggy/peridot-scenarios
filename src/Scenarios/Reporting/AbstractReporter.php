@@ -1,11 +1,12 @@
 <?php
 
-namespace Peridot\Plugin\Scenarios\Reporters;
+namespace Peridot\Plugin\Scenarios\Reporting;
 
 use Peridot\EventEmitterInterface;
 use Peridot\Core\HasEventEmitterTrait;
-use Peridot\Core\AbstractTest;
-use Peridot\Reporter\AbstractBaseReporter ;
+use Peridot\Core\TestInterface;
+use Peridot\Reporter\AbstractBaseReporter;
+use Exception;
 
 abstract class AbstractReporter
 {
@@ -22,7 +23,7 @@ abstract class AbstractReporter
         $this->eventEmitter->on('test.failed', [$this, 'whenTestFails']);
     }
 
-    public function whenTestFails(AbstractTest $test, \Exception $e)
+    public function whenTestFails(TestInterface $test, Exception $e)
     {
         if ($test->explicitly_defined_scenario_count < 2) {
             return;
