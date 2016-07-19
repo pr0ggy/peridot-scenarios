@@ -7,6 +7,8 @@ use Peridot\Core\TestInterface;
 
 /**
  * Represents a set of scenarios to be executed against a given test defintion.
+ *
+ * @package  Peridot\Plugin\Scenarios
  */
 class ScenarioComposite
 {

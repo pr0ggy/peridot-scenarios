@@ -8,8 +8,8 @@ use Peridot\Core\AbstractTest;
 use Peridot\Core\Suite;
 
 /**
- * Context object which tracks the state of the Peridot context to ensure scenarios are
- * bound to the correct test instances.
+ * Tracks the state of the Peridot context to ensure scenarios are bound to the correct
+ * test instances.
  *
  * @package Peridot\Plugin\Scenarios
  */

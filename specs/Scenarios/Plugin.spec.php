@@ -17,7 +17,7 @@ describe('Peridot\Plugin\Scenarios\Plugin', function () {
         Plugin::createAndRegisterSingletonWithConstructionArgs(
             $this->fake_scenario_factory,
             $this->fake_context_listener,
-            m::mock('\Peridot\Plugin\Scenarios\Reporting\AbstractReporter')
+            m::mock('\Peridot\Plugin\Scenarios\Reporter')
         );
     });
 
@@ -31,7 +31,7 @@ describe('Peridot\Plugin\Scenarios\Plugin', function () {
         Plugin::createAndRegisterSingletonWithConstructionArgs(
             $this->fake_scenario_factory,
             $this->fake_context_listener,
-            m::mock('\Peridot\Plugin\Scenarios\Reporting\AbstractReporter')
+            m::mock('\Peridot\Plugin\Scenarios\Reporter')
         );
     });
 
@@ -40,7 +40,7 @@ describe('Peridot\Plugin\Scenarios\Plugin', function () {
         Plugin::createAndRegisterSingletonWithConstructionArgs(
             m::mock('\Peridot\Plugin\Scenarios\ScenarioFactory'),
             m::mock('\Peridot\Plugin\Scenarios\ContextListener'),
-            m::mock('\Peridot\Plugin\Scenarios\Reporting\AbstractReporter')
+            m::mock('\Peridot\Plugin\Scenarios\Reporter')
         );
     }
 

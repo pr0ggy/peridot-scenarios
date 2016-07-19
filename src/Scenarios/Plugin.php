@@ -7,7 +7,7 @@ use Peridot\Plugin\Scenarios\Reporter;
 use Mockleton\MockableSingletonBehavior;
 
 /**
- * Class defining the plugin context itself.  Plugin context is a singleton.
+ * Defines the plugin context itself.  Plugin context is a singleton.
  *
  * @package  Peridot\Plugin\Scenarios
  */
