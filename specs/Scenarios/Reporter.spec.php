@@ -6,7 +6,7 @@
 use Mockery as m;
 use Peridot\Plugin\Scenarios\Test;
 use Peridot\Plugin\Scenarios\Reporter;
-use Peridot\Plugin\Scenarios\Test\Doubles\ReporterTestFailureDetailsSpy;
+use Peridot\Plugin\Scenarios\Test\Doubles;
 use Symfony\Component\Console\Formatter\OutputFormatterStyle;
 
 describe('Peridot\Plugin\Scenarios\Reporter', function () {
@@ -108,18 +108,19 @@ describe('Peridot\Plugin\Scenarios\Reporter', function () {
         });
 
         context('when at least 1 scenario failure registered', function () {
-            xit('should write messages to output indicating scenario failures for each failed test', function () {
-                // IN-PROGRESS
-                $this->fake_output_interface->shouldReceive('writeln')->once()->with('');
-                $this->fake_output_interface->shouldReceive('writeln')->once()->with('  Scenario Failures');
-                $this->fake_output_interface->shouldReceive('writeln')->once()->with('  -------------------');
-                foreach ($this->expected_scenario_failure_output_lines as $line) {
-                    $this->fake_output_interface->shouldReceive('writeln')->once()->with($line);
-                }
-                $this->fake_output_interface->shouldReceive('writeln')->once()->with('');
+            it('should write messages to output indicating scenario failures for each failed test', function () {
+                $output_recording_spy = new Doubles\OutputInterfaceWriteLineRecordingSpy();
+                $this->reporter_under_test =
+                    new Doubles\ReporterTestFailureDetailsSpy(
+                        $this->fake_event_emitter,
+                        $output_recording_spy,
+                        $this->failure_map
+                    );
 
-                $this->reporter_under_test = Test\createReporterTestFailureDetailSpy($this, $this->failure_map);
                 $this->reporter_under_test->printInfoOnAnyScenarioFailures();
+
+                $expected_output_lines = generateCompleteExpectedOutputLineSet($this->expected_scenario_failure_output_lines);
+                assert($output_recording_spy->outputLinesMatch($expected_output_lines));
             });
             inScenario(setUp(function () {
                 $this->failure_map = new SplObjectStorage();
@@ -128,10 +129,62 @@ describe('Peridot\Plugin\Scenarios\Reporter', function () {
 
                 $this->expected_scenario_failure_output_lines = [
                     '  Test 1 Description',
-                    '    Scenario 1 Failed'
+                    '  <failure>Scenario 1 Failed</>'
+                ];
+            }));
+            inScenario(setUp(function () {
+                $this->failure_map = new SplObjectStorage();
+                $fake_test_1 = Test\getLeafOfSimpleDescriptionTestHeirarchyOfDepth(1, this);
+                $this->failure_map[$fake_test_1] = 'Scenario 2 Failed';
+
+                $fake_test_2 = Test\getLeafOfSimpleDescriptionTestHeirarchyOfDepth(2, this);
+                $this->failure_map[$fake_test_2] = 'Scenario 3 Failed';
+
+                $this->expected_scenario_failure_output_lines = [
+                    '  Test 1 Description',
+                    '  <failure>Scenario 2 Failed</>',
+                    '',
+                    '  Test 1 Description',
+                    '    Test 2 Description',
+                    '    <failure>Scenario 3 Failed</>'
+                ];
+            }));
+            inScenario(setUp(function () {
+                $this->failure_map = new SplObjectStorage();
+                $fake_test_1 = Test\getLeafOfSimpleDescriptionTestHeirarchyOfDepth(2, this);
+                $this->failure_map[$fake_test_1] = 'Scenario 6 Failed';
+
+                $fake_test_2 = Test\getLeafOfSimpleDescriptionTestHeirarchyOfDepth(4, this);
+                $this->failure_map[$fake_test_2] = 'Scenario 10 Failed';
+
+                $this->expected_scenario_failure_output_lines = [
+                    '  Test 1 Description',
+                    '    Test 2 Description',
+                    '    <failure>Scenario 6 Failed</>',
+                    '',
+                    '  Test 1 Description',
+                    '    Test 2 Description',
+                    '      Test 3 Description',
+                    '        Test 4 Description',
+                    '        <failure>Scenario 10 Failed</>'
                 ];
             }));
         });
     });
 
 });
+
+function generateCompleteExpectedOutputLineSet($expected_output_lines)
+{
+    return array_merge(
+        [
+            '',
+            '  Scenario Failures',
+            '  -------------------'
+        ],
+            $expected_output_lines,
+        [
+            ''
+        ]
+    );
+}

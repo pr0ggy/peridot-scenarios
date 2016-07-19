@@ -66,6 +66,7 @@ function getLeafOfSimpleDescriptionTestHeirarchyOfDepth($depth, $test_scope)
     $node_count = 1;
     $active_node = createFakeTest();
     $active_node->shouldReceive('getDescription')->andReturn("Test {$node_count} Description");
+    $active_node->shouldReceive('getNode')->passthru();
     $active_node->shouldReceive('walkUp')->passthru();
 
     while ($node_count < $depth) {
@@ -73,8 +74,9 @@ function getLeafOfSimpleDescriptionTestHeirarchyOfDepth($depth, $test_scope)
         $this_node = createFakeTest();
         $this_node->shouldReceive('getDescription')->andReturn("Test {$node_count} Description");
         $this_node->shouldReceive('getParent')->andReturn($active_node);
-        $active_node->shouldReceive('walkUp')->passthru();
         $active_node = $this_node;
+        $active_node->shouldReceive('walkUp')->passthru();
+        $active_node->shouldReceive('getNode')->passthru();
     }
 
     return $active_node;

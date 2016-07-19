@@ -88,10 +88,7 @@ class Reporter
         }
 
         $this->registerOutputStyles();
-
-        $this->output->writeln('');
-        $this->output->writeln('  Scenario Failures');
-        $this->output->writeln('  -------------------');
+        $this->printScenarioFailureReportingHeader();
         foreach ($this->test_to_scenario_failure_message_map as $test) {
             $this->printScenarioFailureMessageForTest($test, $this->test_to_scenario_failure_message_map[$test]);
             $this->output->writeln('');
@@ -104,6 +101,16 @@ class Reporter
     protected function registerOutputStyles()
     {
         $this->output->getFormatter()->setStyle('failure', new OutputFormatterStyle('red', null, array('bold')));
+    }
+
+    /**
+     * Prints out a small scenario reporting header via the OutputInterface dependency
+     */
+    protected function printScenarioFailureReportingHeader()
+    {
+        $this->output->writeln('');
+        $this->output->writeln('  Scenario Failures');
+        $this->output->writeln('  -------------------');
     }
 
     /**
