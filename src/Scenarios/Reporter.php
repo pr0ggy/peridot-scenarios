@@ -24,7 +24,7 @@ class Reporter
     /**
      * @var SplObjectStorage
      */
-    private $test_to_scenario_failure_message_map;
+    protected $test_to_scenario_failure_message_map;
 
     /**
      * @var OutputInterface

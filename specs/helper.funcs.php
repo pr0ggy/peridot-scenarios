@@ -3,7 +3,9 @@
 namespace Peridot\Plugin\Scenarios\Test;
 
 use Mockery as m;
+use SplObjectStorage;
 use Peridot\Core\AbstractTest;
+use Peridot\Plugin\Scenarios\Test\Doubles;
 
 function createFakeTest()
 {
@@ -44,4 +46,36 @@ function createFakeScenarioWithSetupAndTeardownFuncs(callable $setup, callable $
     $fake_scenario->shouldReceive('executeSetupInContext')->andReturnUsing($setup);
     $fake_scenario->shouldReceive('executeTeardownInContext')->andReturnUsing($teardown);
     return $fake_scenario;
+}
+
+function createReporterTestFailureDetailSpy($test_scope, SplObjectStorage $initial_test_failure_map = null)
+{
+    if (isset($initial_test_failure_map) === false) {
+        $initial_test_failure_map = new SplObjectStorage();
+    }
+
+    return new Doubles\ReporterTestFailureDetailsSpy(
+        $test_scope->fake_event_emitter,
+        $test_scope->fake_output_interface,
+        $initial_test_failure_map
+    );
+}
+
+function getLeafOfSimpleDescriptionTestHeirarchyOfDepth($depth, $test_scope)
+{
+    $node_count = 1;
+    $active_node = createFakeTest();
+    $active_node->shouldReceive('getDescription')->andReturn("Test {$node_count} Description");
+    $active_node->shouldReceive('walkUp')->passthru();
+
+    while ($node_count < $depth) {
+        ++$node_count;
+        $this_node = createFakeTest();
+        $this_node->shouldReceive('getDescription')->andReturn("Test {$node_count} Description");
+        $this_node->shouldReceive('getParent')->andReturn($active_node);
+        $active_node->shouldReceive('walkUp')->passthru();
+        $active_node = $this_node;
+    }
+
+    return $active_node;
 }
