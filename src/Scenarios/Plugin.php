@@ -5,6 +5,7 @@ namespace Peridot\Plugin\Scenarios;
 use Peridot\EventEmitterInterface;
 use Peridot\Plugin\Scenarios\Reporter;
 use Mockleton\MockableSingletonBehavior;
+use Symfony\Component\Console\Output\ConsoleOutput;
 
 /**
  * Defines the plugin context itself.  Plugin context is a singleton.
@@ -14,6 +15,20 @@ use Mockleton\MockableSingletonBehavior;
 class Plugin
 {
     use MockableSingletonBehavior;
+
+    /**
+     * Default plugin factory method which registers a new plugin singleton
+     *
+     * @param  EventEmitterInterface $event_emitter
+     */
+    public static function register(EventEmitterInterface $event_emitter)
+    {
+        self::createAndRegisterSingletonWithConstructionArgs(
+            new ScenarioFactory(),
+            new ContextListener($event_emitter),
+            new Reporter($event_emitter, new ConsoleOutput())
+        );
+    }
 
     /**
      * @var ContextListener
