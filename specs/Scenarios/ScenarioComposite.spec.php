@@ -163,38 +163,35 @@ describe('Peridot\Plugin\Scenarios\ScenarioComposite', function () {
         });
     });
 
-    describe('->executeRemainingScenariosExceptLastAgainstTestDefinition()', function () {
+    describe('->executeSpecificScenariosAgainstTestDefinition($specific_scenarios)', function () {
         it('should...do that...', function () {
             $test_scope = $this;
             $scenario_composite_under_test =
                 new ScenarioCompositeExplicitTestSetupAndTeardownDouble(
                     createFakeTestWithEventReportingDefinition($test_scope),
-                    createNFakeEventReportingScenarios($this->scenario_count, $test_scope),
+                    $this->scenarios,
                     createExecutionEventReportingFunctionInScope('test context setup', $test_scope),
                     createExecutionEventReportingFunctionInScope('test context teardown', $test_scope)
                 );
 
-            $scenario_composite_under_test->executeRemainingScenariosExceptLastAgainstTestDefinition();
+            $scenario_composite_under_test->executeSpecificScenariosAgainstTestDefinition($this->scenarios_chunk);
 
             assert($this->execution_events === $this->expected_execution_events);
         });
-        inScenario([
-            'scenario_count' => 2,
-            'expected_execution_events' => []
-        ]);
-        inScenario([
-            'scenario_count' => 3,
-            'expected_execution_events' => [
+        inScenario(setUp(function () {
+            $this->scenarios = createNFakeEventReportingScenarios(2, $this);
+            $this->scenarios_chunk = array_slice($this->scenarios, 1, -1);
+            $this->expected_execution_events = [];
+        }));
+        inScenario(setUp(function () {
+            $this->scenarios = createNFakeEventReportingScenarios(3, $this);
+            $this->scenarios_chunk = $this->scenarios;
+            $this->expected_execution_events = [
                 'test context setup',
-                'scenario 2 setup',
+                'scenario 1 setup',
                 'test definition',
-                'scenario 2 teardown',
+                'scenario 1 teardown',
                 'test context teardown',
-            ]
-        ]);
-        inScenario([
-            'scenario_count' => 4,
-            'expected_execution_events' => [
                 'test context setup',
                 'scenario 2 setup',
                 'test definition',
@@ -205,8 +202,60 @@ describe('Peridot\Plugin\Scenarios\ScenarioComposite', function () {
                 'test definition',
                 'scenario 3 teardown',
                 'test context teardown'
-            ]
-        ]);
+            ];
+        }));
+        inScenario(setUp(function () {
+            $this->scenarios = createNFakeEventReportingScenarios(3, $this);
+            $this->scenarios_chunk = array_slice($this->scenarios, 1, -1);
+            $this->expected_execution_events = [
+                'test context setup',
+                'scenario 2 setup',
+                'test definition',
+                'scenario 2 teardown',
+                'test context teardown'
+            ];
+        }));
+        inScenario(setUp(function () {
+            $this->scenarios = createNFakeEventReportingScenarios(4, $this);
+            $this->scenarios_chunk = array_slice($this->scenarios, 1, -1);
+            $this->expected_execution_events = [
+                'test context setup',
+                'scenario 2 setup',
+                'test definition',
+                'scenario 2 teardown',
+                'test context teardown',
+                'test context setup',
+                'scenario 3 setup',
+                'test definition',
+                'scenario 3 teardown',
+                'test context teardown'
+            ];
+        }));
+        // inScenario([
+        //     'scenario_count' => 3,
+        //     'expected_execution_events' => [
+        //         'test context setup',
+        //         'scenario 2 setup',
+        //         'test definition',
+        //         'scenario 2 teardown',
+        //         'test context teardown',
+        //     ]
+        // ]);
+        // inScenario([
+        //     'scenario_count' => 4,
+        //     'expected_execution_events' => [
+        //         'test context setup',
+        //         'scenario 2 setup',
+        //         'test definition',
+        //         'scenario 2 teardown',
+        //         'test context teardown',
+        //         'test context setup',
+        //         'scenario 3 setup',
+        //         'test definition',
+        //         'scenario 3 teardown',
+        //         'test context teardown'
+        //     ]
+        // ]);
     });
 
     describe('->executeTestSetup()', function () {

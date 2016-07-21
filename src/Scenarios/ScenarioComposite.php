@@ -5,6 +5,7 @@ namespace Peridot\Plugin\Scenarios;
 use Peridot\Core\HasEventEmitterTrait;
 use Peridot\Core\TestInterface;
 use Peridot\Plugin\Scenarios\ScenarioContextAction;
+use Exception;
 
 /**
  * Represents a set of scenarios to be executed against a given test defintion.
@@ -123,13 +124,22 @@ class ScenarioComposite
     protected function getMultiScenarioCompositeSetupCallable()
     {
         $scenario_composite = $this;
-        return new ScenarioContextAction(function () use ($scenario_composite) {
+        $second_through_second_last_scenario = array_slice($this->scenarios, 1, -1);
+        return new ScenarioContextAction(function () use ($scenario_composite, $second_through_second_last_scenario) {
             $scenario_composite->executeFirstScenarioAgainstTestDefinition();
-            $scenario_composite->executeRemainingScenariosExceptLastAgainstTestDefinition();
+            $scenario_composite->executeSpecificScenariosAgainstTestDefinition($second_through_second_last_scenario);
             $scenario_composite->prepareForLastScenarioToBeExecutedAgainstTestDefinition();
         });
     }
 
+    /**
+     * Executes the first scenario against the test definition.  Because we're hooking
+     * scenario execution in as a test setup function, the test setup will already be
+     * completed when the first scenario is ready to run against the test definition,
+     * meaning for the first scenario, we only have to execute the scenario setup, run the
+     * test definition, run scenario teardown, and then run test teardown.  The test setup
+     * will have already been completed.
+     */
     public function executeFirstScenarioAgainstTestDefinition()
     {
         $first_scenario = $this->scenarios[0];
@@ -137,6 +147,14 @@ class ScenarioComposite
         $this->executeTestTeardown();
     }
 
+    /**
+     * Executes all teardown callbacks associated with a test with the intent to then re-
+     * run all setup callbacks, setup the next scenario, and run the scenario against the
+     * test definition.  However, we have to remember that the final scenario teardown
+     * action will be in the form of an invocable ScenarioContextAction registered as a
+     * test teardown function...so we have to take care not to execute that particular
+     * teardown action.
+     */
     public function executeTestTeardown()
     {
         $this->test->walkUp(
@@ -153,16 +171,31 @@ class ScenarioComposite
         );
     }
 
-    public function executeRemainingScenariosExceptLastAgainstTestDefinition()
+    /**
+     * Executes the given scenario set against the  test definition.  This means:
+     * 		Executing all setup callbacks associated with the test
+     * 		Executing scenario setup
+     * 		Executing test definition
+     * 		Executing scenario teardown
+     * 		Executing all teardown callbacks associated with the test
+     */
+    public function executeSpecificScenariosAgainstTestDefinition(array $specific_scenarios)
     {
-        $all_scenarios_except_last = array_slice($this->scenarios, 1, -1);
-        foreach ($all_scenarios_except_last as $active_scenario) {
+        foreach ($specific_scenarios as $active_scenario) {
             $this->executeTestSetup();
             $this->executeScenarioAgainstTestDefinition($active_scenario);
             $this->executeTestTeardown();
         }
     }
 
+    /**
+     * Executes all setup callbacks associated with a test with the intent to then setup
+     * the next scenario, run the scenario against the test definition, then run scenario
+     * and test teardowns.  However, we have to remember that the method we're using to
+     * hook in this scenario execution system is in the form of an invocable
+     * ScenarioContextAction registered as a test setup function...so we have to take care
+     * not to execute that particular setup action.
+     */
     public function executeTestSetup()
     {
         $this->test->walkDown(
@@ -179,18 +212,33 @@ class ScenarioComposite
         );
     }
 
+    /**
+     * Executes the given scenario against the test definition.  This entails:
+     * 		Executing the scenario setup
+     * 	 	Executing the test definition
+     * 	 	Executing the scenario teardown
+     *
+     * @param  Scenario $scenario
+     * @throws Exception if any exceptions occur during the scenario setup, execution against
+     *         			 the test definition, or scenario teardown
+     */
     protected function executeScenarioAgainstTestDefinition(Scenario $scenario)
     {
         try {
             $scenario->executeSetupInContext($this->test_scope);
             ($this->test_definition)();
             $scenario->executeTeardownInContext($this->test_scope);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $e->failed_scenario_index = $scenario->index;
             throw $e;
         }
     }
 
+    /**
+     * Prepares for the final scenario to be run by:
+     * 		Executing all setup callbacks associated with the test
+     * 		Executing the setup for the final scenario
+     */
     public function prepareForLastScenarioToBeExecutedAgainstTestDefinition()
     {
         $this->executeTestSetup();
@@ -198,6 +246,14 @@ class ScenarioComposite
         $last_scenario->executeSetupInContext($this->test_scope);
     }
 
+    /**
+     * Returns a callback designed to be hooked into a test as a teardown function via
+     * TestInterface::addTearDownFunction($fn).  The only thing this callable need be
+     * responsible for is tearing down the final scenario that was executed against the
+     * test definition.  If no scenarios are present, then a simple no-op is used.
+     *
+     * @return callable
+     */
     public function asCallableTearDownHook()
     {
         if (empty($this->scenarios)) {
