@@ -28,9 +28,8 @@ describe('Peridot\Plugin\Scenarios\Scenario', function () {
     describe('->executeSetupInContext($scope)', function () {
         it('should execute the setup action within the given scope context', function () {
             $mock_context_applied_action = Test\createFakeScenarioContextAction();
-            $mock_context_applied_action->shouldReceive('__invoke')->once();
             $this->fake_setup_action
-                ->shouldReceive('inContext')
+                ->shouldReceive('executeInContext')
                 ->once()
                 ->with($this->fake_scope)
                 ->andReturn($mock_context_applied_action);
@@ -42,9 +41,8 @@ describe('Peridot\Plugin\Scenarios\Scenario', function () {
     describe('->executeTeardownInContext($scope)', function () {
         it('should execute the teardown action within the given scope context', function () {
             $mock_context_applied_action = Test\createFakeScenarioContextAction();
-            $mock_context_applied_action->shouldReceive('__invoke')->once();
             $this->fake_teardown_action
-                ->shouldReceive('inContext')
+                ->shouldReceive('executeInContext')
                 ->once()
                 ->with($this->fake_scope)
                 ->andReturn($mock_context_applied_action);

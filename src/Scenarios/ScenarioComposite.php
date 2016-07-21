@@ -4,9 +4,41 @@ namespace Peridot\Plugin\Scenarios;
 
 use Peridot\Core\HasEventEmitterTrait;
 use Peridot\Core\TestInterface;
+use Peridot\Plugin\Scenarios\ScenarioContextAction;
 
 /**
  * Represents a set of scenarios to be executed against a given test defintion.
+ * The main methods of this class are 'asCallableSetupHook()' and 'asCallableTearDownHook'.
+ * In the setup hook, the idea is to execute N-1 scenarios against the test definition of
+ * the TestInterface instance member, and run the setup of the Nth scenario. We need to
+ * take this route because the Peridot core code will always follow the loop:
+ * 		Execute test setup callbacks, top-down
+ * 		Execute test definition
+ * 		Execute test teardown callbacks, bottom-up
+ *
+ * This means that the test definition will be executed at least once after execution
+ * of all setup callbacks (which we're hooking into to execute the scenarios), so we have
+ * to ensure the last scenario is set up during this execution of the test definition.
+ * This means the new logical flow of the Peridot core test execution loop with the
+ * Scenarios plugin enabled is:
+ * 		Execute test setup callbacks, top-down
+ * 		Execute N-1 scenarios against the test definition via a callable added as a final test setup function
+ * 			Scenario setup
+ * 			Test definition
+ * 			Scenario teardown
+ * 			Test teardown, bottom-up
+ * 			Test Setup, top-down
+ * 			Scenario Setup
+ * 			Test definition
+ * 			Test teardown, bottom-up
+ * 			...
+ * 			Scenario N setup
+ * 		Execute test definition
+ * 		Execute Scenario N teardown
+ * 		Execute test teardown callbacks, bottom-up
+ *
+ * As apparent above, the teardown hook merely executes the teardown action of the last
+ * scenario in the set.
  *
  * @package  Peridot\Plugin\Scenarios
  */
@@ -44,6 +76,16 @@ class ScenarioComposite
         $this->scenarios = $scenarios;
     }
 
+    /**
+     * Returns a callback designed to be hooked into a test as a final setup function via
+     * TestInterface::addSetupFunction($fn).  The idea is this function executes N-1
+     * scenarios against the test definition and then runs the setup for the Nth scenario,
+     * ensuring all scenarios are executed once against the test definition.  If no test
+     * scenarios have been given, a simple no-op is used.  If only 1 is given, then we just
+     * run the setup for that scenario.
+     *
+     * @return callable
+     */
     public function asCallableSetupHook()
     {
         switch (count($this->scenarios)) {
@@ -57,6 +99,12 @@ class ScenarioComposite
         }
     }
 
+    /**
+     * Returns a callable ScenarioContextAction instance that will execute the setup code
+     * of the first scenario when invoked
+     *
+     * @return ScenarioContextAction
+     */
     protected function getFirstScenarioSetupCallable()
     {
         $first_scenario = $this->scenarios[0];
@@ -66,6 +114,12 @@ class ScenarioComposite
         });
     }
 
+    /**
+     * Returns a callable ScenarioContextAction instance that will execute N-1 scenarios
+     * against the test definition and then execute the setup of the Nth scenario
+     *
+     * @return ScenarioContextAction
+     */
     protected function getMultiScenarioCompositeSetupCallable()
     {
         $scenario_composite = $this;

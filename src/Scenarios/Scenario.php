@@ -40,8 +40,7 @@ class Scenario
      */
     public function executeSetupInContext(Scope $scope)
     {
-        $context_bound_setup = $this->setup->inContext($scope);
-        $context_bound_setup();
+        $this->setup->executeInContext($scope);
     }
 
     /**
@@ -52,7 +51,6 @@ class Scenario
      */
     public function executeTeardownInContext(Scope $scope)
     {
-        $context_bound_teardown = $this->teardown->inContext($scope);
-        $context_bound_teardown();
+        $this->teardown->executeInContext($scope);
     }
 }

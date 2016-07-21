@@ -25,15 +25,15 @@ class ScenarioContextAction
     }
 
     /**
-     * Returns a copy of the action loaded with the action's callable bound to the given
-     * context argument
+     * Executes the action's callable bound to the given context argument
      *
      * @param  mixed $context
-     * @return ScenarioContextAction
+     * @return mixed
      */
-    public function inContext($context)
+    public function executeInContext($context)
     {
-        return new static(Closure::bind($this->action_callable, $context));
+        $bound_action = Closure::bind($this->action_callable, $context);
+        return $bound_action();
     }
 
     /**
