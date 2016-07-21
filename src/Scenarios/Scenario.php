@@ -5,8 +5,8 @@ namespace Peridot\Plugin\Scenarios;
 use Peridot\Core\Scope;
 
 /**
- * Represents a specific context setup/teardown to be applied to a given test definition to
- * represent an execution of the test in a given scenario.
+ * Represents a specific context setup/teardown to be applied to a given test definition
+ * to represent an execution of the test in a given scenario.
  *
  * @package  Peridot\Plugin\Scenarios
  */
@@ -49,7 +49,6 @@ class Scenario
      * the given Scope argument
      *
      * @param Scope $scope
-     * @return ScenarioContextAction
      */
     public function executeTeardownInContext(Scope $scope)
     {

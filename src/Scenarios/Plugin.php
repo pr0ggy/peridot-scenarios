@@ -21,7 +21,7 @@ class Plugin
     private $peridot_context_listener;
 
     /**
-     * @var Reporters\AbstractReporter
+     * @var Reporter
      */
     private $scenario_reporter;
 
@@ -31,9 +31,9 @@ class Plugin
     private $scenario_factory;
 
     /**
-     * @param ScenarioFactory       $scenario_factory
-     * @param ContextListener       $peridot_context_listener
-     * @param AbstractReporter      $scenario_reporter
+     * @param ScenarioFactory $scenario_factory
+     * @param ContextListener $peridot_context_listener
+     * @param Reporter        $scenario_reporter
      */
     protected function __construct(
         ScenarioFactory $scenario_factory,
